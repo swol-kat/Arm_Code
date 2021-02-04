@@ -51,6 +51,10 @@ class RobotJoint:
         return self.odriveAxis.motor.current_control.Iq_measured * self.torque_constant
     
     def runManualHomingRoutine(self):
+        self.odriveAxis.requested_state = odrive.enums.AXIS_STATE_IDLE
+        self.odriveAxis.encoder.set_linear_count(0)
+        self.odriveAxis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
+        self.odriveAxis.controller.input_pos = 0.0
         while(1):
             if keyboard.is_pressed('a'):
                 self.odriveAxis.controller.input_pos += 0.01

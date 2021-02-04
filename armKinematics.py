@@ -35,6 +35,11 @@ class Arm:
     
     def goToPosition(self, posVect):
         self.targetPos = posVect
+        theta1 = math.atan2(posVect[0, 0], posVect[0, 2]) + acos(self.armVars[ArmVariables.A1]/(math.sqrt(math.pow(posVect[0, 2], 2) + math.pow(posVect[0, 1], 2))))
+        self.shoulderAxis.setSetpoint(theta1)
+        L = math.sqrt(math.pow(posVect[0, 2], 2) + math.pow(posVect[0, 0], 2) - math.pow(self.armVars[ArmVariables.A1], 2))
+        outVect = np.array([L], [posVect[0, 1]], [0])
+        goTo2dPos(outVect)
     
     def setCurrentLimits(self, minForce, maxForce):
         #know the jacobian and maths
@@ -104,4 +109,18 @@ class Arm:
         self.accel = np.array([[self.shoulderAxis.get_accel()],[self.upperAxis.get_accel()],[self.lowerAxis.get_accel()]])
 
         self.torque = np.array([[self.shoulderAxis.get_torque()],[self.upperAxis.get_torque()],[self.lowerAxis.get_torque()]])
+
+    def homeArm(self):
+        print("homing shoudler")
+        self.shoulderAxis.runManualHomingRoutine()
+        print("homing upper")
+        self.upperAxis.runManualHomingRoutine()
+        print("homing lower")
+        self.lowerAxis.runManualHomingRoutine()
+    
+    def calibrateArm(self):
+        self.shoulderAxis.calibrateJoint()
+        self.upperAxis.calibrateJoint()
+        self.lowerAxis.calibrateJoint()
+    
     
