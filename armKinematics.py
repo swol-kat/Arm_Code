@@ -70,9 +70,9 @@ class Arm:
         # dh table
         if not thetas: 
             thetas = self.thetas
-        dh_table = [['t','d','a','alp'],
-                    ['t','d','a','alp'],
-                    ['t','d','a','alp']]
+        dh_table = [[0 , self.armVars[armVariables.D1], self.armVars[armVariables.A1] , math.pi/2],
+                    [0 , 0 , self.armVars[armVariables.A2], 0],
+                    [0 , 0 , self.armVars[armVariables.A3], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
