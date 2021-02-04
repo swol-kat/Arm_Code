@@ -1,0 +1,11 @@
+import odrive
+from odrive.enums import *
+myDrive = odrive.find_any()
+myDrive.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+myDrive.axis1.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+while myDrive.axis1.current_state != AXIS_STATE_IDLE:
+    time.sleep(0.1)
+while myDrive.axis0.current_state != AXIS_STATE_IDLE:
+    time.sleep(0.1)
+myDrive.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+myDrive.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
