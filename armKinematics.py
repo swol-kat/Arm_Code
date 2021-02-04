@@ -4,12 +4,6 @@ import numpy as np
 from kinematics import htm
 from enum import Enum
 
-class ArmVariables(Enum):
-    A1 = 0
-    D1 = 1
-    A2 = 2
-    A3 = 3
-
 
 class Arm:
     def __init__(self, lowerAxis, upperAxis, shoulderAxis, armVars):
@@ -26,20 +20,20 @@ class Arm:
         self.torque = np.array([[0],[0],[0]])
 
     def goTo2dPos(self, posVect):
-        x = posVect[0,0]
-        y = posVect[0,1]
-        theta1 = math.acos((math.pow(self.armVars[ArmVariables.A2], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars[ArmVariables.A3], 2))/(2 * self.armVars[ArmVariables.A2] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x,y)
-        theta2 = math.acos((math.pow(self.armVars[ArmVariables.A2], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars[ArmVariables.A3], 2))/(2 * self.armVars[ArmVariables.A2] * self.armVars[armVariables.A3])) + theta1 - math.pi
+        x = posVect[0][0]
+        y = posVect[1][0]
+        theta1 = math.acos((math.pow(self.armVars['A2'], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars['A3'], 2))/(2 * self.armVars['A2'] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x,y)
+        theta2 = math.acos((math.pow(self.armVars['A2'], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars['A3'], 2))/(2 * self.armVars['A2'] * self.armVars['A3'])) + theta1 - math.pi
         self.upperAxis.setSetpoint(theta1)
         self.lowerAxis.setSetpoint(theta2)
     
     def goToPosition(self, posVect):
         self.targetPos = posVect
-        theta1 = math.atan2(posVect[0, 0], posVect[0, 2]) + acos(self.armVars[ArmVariables.A1]/(math.sqrt(math.pow(posVect[0, 2], 2) + math.pow(posVect[0, 1], 2))))
+        theta1 = math.atan2(posVect[0][0], posVect[2][0]) + math.acos(self.armVars['A1']/(math.sqrt(math.pow(posVect[2][0], 2) + math.pow(posVect[1][0], 2))))
         self.shoulderAxis.setSetpoint(theta1)
-        L = math.sqrt(math.pow(posVect[0, 2], 2) + math.pow(posVect[0, 0], 2) - math.pow(self.armVars[ArmVariables.A1], 2))
-        outVect = np.array([L], [posVect[0, 1]], [0])
-        goTo2dPos(outVect)
+        L = math.sqrt(math.pow(posVect[2][0], 2) + math.pow(posVect[0][0], 2) - math.pow(self.armVars['A1'], 2))
+        outVect = np.array([[L], [posVect[1][0]], [0]])
+        self.goTo2dPos(outVect)
     
     def setCurrentLimits(self, minForce, maxForce):
         #know the jacobian and maths
@@ -76,9 +70,9 @@ class Arm:
         if not thetas: 
             thetas = self.thetas
             
-        dh_table = [[0 , self.armVars[armVariables.D1], self.armVars[armVariables.A1] , math.pi/2],
-                    [0 , 0 , self.armVars[armVariables.A2], 0],
-                    [0 , 0 , self.armVars[armVariables.A3], 0]]
+        dh_table = [[0 , self.armVars['D1'], self.armVars['A1'] , math.pi/2],
+                    [0 , 0 , self.armVars['A2'], 0],
+                    [0 , 0 , self.armVars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
@@ -122,5 +116,10 @@ class Arm:
         self.shoulderAxis.calibrateJoint()
         self.upperAxis.calibrateJoint()
         self.lowerAxis.calibrateJoint()
+
+    def enableArm(self):
+        self.shoulderAxis.enableJoint()
+        self.upperAxis.enableJoint()
+        self.lowerAxis.enableJoint()
     
     

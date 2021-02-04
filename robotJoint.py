@@ -4,7 +4,7 @@ import math
 import time
 import keyboard
 
-class RobotJoint:
+class robotJoint:
     def __init__(self, odriveAxis, gearRatio):
         self.odriveAxis = odriveAxis
         self.gearRatio = gearRatio
@@ -56,12 +56,13 @@ class RobotJoint:
         self.odriveAxis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
         self.odriveAxis.controller.input_pos = 0.0
         while(1):
-            if keyboard.is_pressed('a'):
+            if keyboard.is_pressed('left'):
                 self.odriveAxis.controller.input_pos += 0.01
-            if keyboard.is_pressed('d'):
+            if keyboard.is_pressed('right'):
                 self.odriveAxis.controller.input_pos -= 0.01
             if keyboard.is_pressed('space'):
                 break
             time.sleep(0.05)
         self.odriveAxis.requested_state = odrive.enums.AXIS_STATE_IDLE
         self.odriveAxis.encoder.set_linear_count(0)
+        time.sleep(1)
