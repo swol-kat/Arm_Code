@@ -19,7 +19,7 @@ class Arm:
         self.armVars = armVars
 
         self.targetPos = np.array([[0],[0],[0]])
-        self.thetas = np.array([[0],[0],[0]])
+        self.thetas = np.array([[0],[0],[0]]) #
         self.pos = np.array([[0],[0],[0]])
         self.vel = np.array([[0],[0],[0]])
         self.accel = np.array([[0],[0],[0]])
@@ -28,8 +28,8 @@ class Arm:
     def goTo2dPos(self, posVect):
         x = posVect[0,0]
         y = posVect[0,1]
-        theta1 = math.acos((math.pow(self.armVars[armVariables.A2], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars[armVariables.A3], 2))/(2 * self.armVars[armVariables.A2] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x,y)
-        theta2 = math.acos((math.pow(self.armVars[armVariables.A2], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars[armVariables.A3], 2))/(2 * self.armVars[armVariables.A2] * self.armVars[armVariables.A3])) + theta1 - math.pi
+        theta1 = math.acos((math.pow(self.armVars[ArmVariables.A2], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars[ArmVariables.A3], 2))/(2 * self.armVars[ArmVariables.A2] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x,y)
+        theta2 = math.acos((math.pow(self.armVars[ArmVariables.A2], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars[ArmVariables.A3], 2))/(2 * self.armVars[ArmVariables.A2] * self.armVars[armVariables.A3])) + theta1 - math.pi
         self.upperAxis.setSetpoint(theta1)
         self.lowerAxis.setSetpoint(theta2)
     
@@ -70,9 +70,9 @@ class Arm:
         # dh table
         if not thetas: 
             thetas = self.thetas
-        dh_table = [['t','d','a','alp'],
-                    ['t','d','a','alp'],
-                    ['t','d','a','alp']]
+        dh_table = [['t','d','a',math.pi/2],
+                    ['t',0,'a',0],
+                    ['t',0,'a',0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
