@@ -56,6 +56,7 @@ class Arm:
             new_target = diff * perc_move + start_pos
 
             thetas = self.ikin(new_target)
+            print(thetas)
             self.send_to_pos(thetas)
 
             elapsed_time = time.time() - start_time
