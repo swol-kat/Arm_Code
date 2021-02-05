@@ -30,8 +30,8 @@ class Arm:
         theta2 = math.acos(
             (math.pow(self.armVars['A2'], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars['A3'], 2)) / (
                     2 * self.armVars['A2'] * self.armVars['A3'])) + theta1 - math.pi
-        self.upper_axis(theta1)
-        self.lower_axis(theta2)
+        self.upper_axis.set_setpoint(theta1)
+        self.lower_axis.set_setpoint(theta2)
 
     def ikin(self, pos_vect):
         self.targetPos = pos_vect
