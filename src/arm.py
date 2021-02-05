@@ -21,30 +21,30 @@ class Arm:
         self.torque = np.array([[0], [0], [0]])
 
     def ikin(self, pos_vect):
-        # position vect in X, Y, Z
-        theta1 = math.pi/2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
-            (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.arm_vars['A1'], 2))
-            /
-            (math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) ) * math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) -  math.pow(self.arm_vars['A1'], 2)))
-        )
+        x, y, z = pos_vect.reshape(3)
+        d1, d2, a2, a3 = self.arm_vars.values()
+        # theta 1
+        phi = math.atan2(y, x)
+        r = math.hypot(x, y)
+        alph = math.atan2(d2, math.sqrt(r ** 2 - d2 ** 2))
+        t1 = phi - alph
+        # theta 2 and 3
+        s = z - d1
+        u = math.sqrt(r ** 2 - d2 ** 2)
+        D = (u ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+        D = max((D, 1))
+        print(math.sqrt(1 - D ** 2))
+        t3 = math.atan2(math.sqrt(1 - D ** 2), D)
+        beta = math.atan2(s, r)
+        t2 = beta - t3
 
-        L = math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.arm_vars['A1'], 2))
+        return np.array([t1, t2, t3]).reshape((3, 1))
 
-        theta2 = math.atan2(pos_vect[2][0], L) - math.pi + math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.arm_vars['A2'], 2) - math.pow(self.arm_vars['A3'], 2))
-            /
-            (2 * math.hypot(pos_vect[2][0], L) * self.arm_vars['A2'])
-        )
-
-        theta3 = math.pi * -1.0 - math.atan2(L, pos_vect[2][0]) - math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.arm_vars['A3'], 2) - math.pow(self.arm_vars['A2'], 2))
-            /
-            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2)) * self.arm_vars['A3'])
-        )
-        
-        self.shoulder_axis.set_setpoint(theta1)
-        self.upper_axis.set_setpoint(theta2)
-        self.lower_axis.set_setpoint(theta3)
+    def send_to_pos(self, thetas):
+        t1, t2, t3 = thetas.reshape(3)
+        self.shoulder_axis.set_setpoint(t1)
+        self.shoulder_axis.set_setpoint(t2)
+        self.shoulder_axis.set_setpoint(t3)
 
     def go_to(self, target_pos, movement_time=.5):
         start_time = time.time()
@@ -56,7 +56,8 @@ class Arm:
 
             new_target = diff * perc_move + start_pos
 
-            self.ikin(new_target)
+            thetas = self.ikin(new_target)
+            self.send_to_pos(thetas)
 
             elapsed_time = time.time() - start_time
             time.sleep(.01)
@@ -109,8 +110,8 @@ class Arm:
             t_final = t_final @ htm(*params)
         # if vector retun just the pos var
         if vector:
-            v=copy(t_final[0:3, 3])
-            v.resize(3,1)
+            v = copy(t_final[0:3, 3])
+            v.resize(3, 1)
             return v
 
         return t_final
