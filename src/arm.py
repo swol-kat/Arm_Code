@@ -1,6 +1,9 @@
 import math
 import numpy as np
 from kinematics import htm
+import time
+from copy import copy
+from trajectory import quintic
 
 
 class Arm:
@@ -12,24 +15,12 @@ class Arm:
 
         self.targetPos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[0], [0], [0]])
+        self.pos = np.array([[6], [6], [6]])
         self.vel = np.array([[0], [0], [0]])
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
-    def go_to_2d(self, pos_vect):
-        x = pos_vect[0][0]
-        y = pos_vect[1][0]
-        theta1 = math.acos(
-            (math.pow(self.armVars['A2'], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars['A3'], 2)) / (
-                    2 * self.armVars['A2'] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x, y)
-        theta2 = math.acos(
-            (math.pow(self.armVars['A2'], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars['A3'], 2)) / (
-                    2 * self.armVars['A2'] * self.armVars['A3'])) + theta1 - math.pi
-        self.upper_axis.set_setpoint(theta1)
-        self.lower_axis.set_setpoint(theta2)
-
-    def go_to_pos(self, pos_vect):
+    def ikin(self, pos_vect):
         # position vect in X, Y, Z
         theta1 = math.pi/2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
             (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
@@ -42,8 +33,8 @@ class Arm:
         theta2 = math.atan2(pos_vect[2][0], L) - math.pi + math.acos(
             (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A2'], 2) - math.pow(self.armVars['A3'], 2))
             /
-            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2) * self.armVars['A2']))
-            )
+            (2 * math.hypot(pos_vect[2][0], L) * self.armVars['A2'])
+        )
 
         theta3 = math.pi * -1.0 - math.atan2(L, pos_vect[2][0]) - math.acos(
             (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A3'], 2) - math.pow(self.armVars['A2'], 2))
@@ -54,6 +45,23 @@ class Arm:
         self.shoulder_axis.set_setpoint(theta1)
         self.upper_axis.set_setpoint(theta2)
         self.lower_axis.set_setpoint(theta3)
+
+    def go_to(self, target_pos, movement_time=.5):
+        start_time = time.time()
+        elapsed_time = time.time() - start_time
+        start_pos = copy(self.pos)
+        diff = target_pos - start_pos
+        while elapsed_time <= movement_time:
+            perc_move = quintic(elapsed_time / movement_time)
+
+            new_target = diff * perc_move + start_pos
+
+            self.ikin(new_target)
+
+            elapsed_time = time.time() - start_time
+            time.sleep(.01)
+
+        print('reached')
 
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths
@@ -97,12 +105,12 @@ class Arm:
         # calculate fwkin
         for i in range(joint - 1):
             params = dh_table[i]
-            dh_table[0] += thetas[0, i]
+            dh_table[0] += thetas[i, 0]
             t_final *= htm(*params)
 
         # if vector retun just the pos var
         if vector:
-            return t_final[0:3, 3]
+            return t_final[0:3, 3].resize((3, 1))
 
         return t_final
 
