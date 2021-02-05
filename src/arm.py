@@ -16,7 +16,7 @@ class Arm:
 
         self.targetPos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[0], [0], [0]])
+        self.pos = np.array([[6], [6], 6])
         self.vel = np.array([[0], [0], [0]])
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
@@ -54,7 +54,10 @@ class Arm:
 
             new_target = diff * perc_move + start_pos
             print(new_target)
-            self.ikin_2d(new_target)
+            try:
+                self.ikin(new_target)
+            except:
+                self.ikin_2d(new_target)
 
             elapsed_time = time.time()-start_time
             time.sleep(.01)
