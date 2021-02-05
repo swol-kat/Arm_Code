@@ -20,7 +20,7 @@ for odrive in odrives:
     output_dict[c['axis1']['name']] = Joint(odrive.axis1, c['axis1']['ratio'])
     output_dict[c['axis0']['name']] = Joint(odrive.axis0, c['axis0']['ratio'])
 
-arm_variables = {'A1': 3.319, 'D1': 3.125, 'A2': 7.913, 'A3': 9.0}
+arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
 single_arm = Arm(output_dict['1 lower'], output_dict['1 upper'], output_dict['1 shoulder'], arm_variables)
 

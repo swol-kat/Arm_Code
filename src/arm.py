@@ -11,7 +11,7 @@ class Arm:
         self.lower_axis = lower_axis
         self.upper_axis = upper_axis
         self.shoulder_axis = shoulder_axis
-        self.armVars = arm_vars
+        self.arm_vars = arm_vars
 
         self.targetPos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
@@ -23,23 +23,23 @@ class Arm:
     def ikin(self, pos_vect):
         # position vect in X, Y, Z
         theta1 = math.pi/2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
-            (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
+            (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.arm_vars['A1'], 2))
             /
-            (math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) ) * math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) -  math.pow(self.armVars['A1'], 2)))
+            (math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) ) * math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) -  math.pow(self.arm_vars['A1'], 2)))
         )
 
-        L = math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
+        L = math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.arm_vars['A1'], 2))
 
         theta2 = math.atan2(pos_vect[2][0], L) - math.pi + math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A2'], 2) - math.pow(self.armVars['A3'], 2))
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.arm_vars['A2'], 2) - math.pow(self.arm_vars['A3'], 2))
             /
-            (2 * math.hypot(pos_vect[2][0], L) * self.armVars['A2'])
+            (2 * math.hypot(pos_vect[2][0], L) * self.arm_vars['A2'])
         )
 
         theta3 = math.pi * -1.0 - math.atan2(L, pos_vect[2][0]) - math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A3'], 2) - math.pow(self.armVars['A2'], 2))
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.arm_vars['A3'], 2) - math.pow(self.arm_vars['A2'], 2))
             /
-            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2)) * self.armVars['A3'])
+            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2)) * self.arm_vars['A3'])
         )
         
         self.shoulder_axis.set_setpoint(theta1)
@@ -97,20 +97,21 @@ class Arm:
         if not thetas:
             thetas = self.thetas
 
-        dh_table = [[0, self.armVars['D1'], self.armVars['A1'], math.pi / 2],
-                    [0, 0, self.armVars['A2'], 0],
-                    [0, 0, self.armVars['A3'], 0]]
+        dh_table = [[0, self.arm_vars['D1'], 0, - math.pi / 2],
+                    [0, self.arm_vars['D2'], self.arm_vars['A2'], 0],
+                    [0, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
-        for i in range(joint - 1):
+        for i in range(joint):
             params = dh_table[i]
-            dh_table[0] += thetas[i, 0]
-            t_final *= htm(*params)
-
+            params[0] += thetas[i, 0]
+            t_final = t_final @ htm(*params)
         # if vector retun just the pos var
         if vector:
-            return t_final[0:3, 3].resize((3, 1))
+            v=copy(t_final[0:3, 3])
+            v.resize(3,1)
+            return v
 
         return t_final
 
