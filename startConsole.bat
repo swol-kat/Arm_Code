@@ -1,1 +1,1 @@
-python -i InitOdrive.py
+python -i src/initodrive.py
