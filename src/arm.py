@@ -6,7 +6,6 @@ from copy import copy
 from trajectory import quintic
 
 
-
 class Arm:
     def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars):
         self.lower_axis = lower_axis
@@ -20,8 +19,6 @@ class Arm:
         self.vel = np.array([[0], [0], [0]])
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
-
-
 
     def ikin(self, pos_vect):
         # position vect in X, Y, Z
@@ -50,25 +47,22 @@ class Arm:
         self.upper_axis.set_setpoint(theta2)
         self.lower_axis.set_setpoint(theta3)
 
-
-
-    def go_to(self,target_pos, movement_time=.5):
+    def go_to(self, target_pos, movement_time=.5):
         start_time = time.time()
         elapsed_time = time.time() - start_time
         start_pos = copy(self.pos)
         diff = target_pos - start_pos
         while elapsed_time <= movement_time:
-            perc_move = quintic(elapsed_time/movement_time)
+            perc_move = quintic(elapsed_time / movement_time)
 
             new_target = diff * perc_move + start_pos
 
             self.ikin(new_target)
 
-            elapsed_time = time.time()-start_time
+            elapsed_time = time.time() - start_time
             time.sleep(.01)
 
         print('reached')
-
 
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths
@@ -112,13 +106,12 @@ class Arm:
         # calculate fwkin
         for i in range(joint - 1):
             params = dh_table[i]
-            dh_table[0] += thetas[i , 0]
+            dh_table[0] += thetas[i, 0]
             t_final *= htm(*params)
 
         # if vector retun just the pos var
         if vector:
-            print(t_final)
-            return t_final[0:3, 3]
+            return t_final[0:3, 3].resize((3, 1))
 
         return t_final
 
