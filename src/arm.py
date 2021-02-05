@@ -55,7 +55,6 @@ class Arm:
             perc_move = quintic(elapsed_time/movement_time)
 
             new_target = diff * perc_move + start_pos
-            print(new_target)
             try:
                 self.ikin(new_target)
             except:
