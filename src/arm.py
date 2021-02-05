@@ -21,6 +21,8 @@ class Arm:
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
+        self.update()
+
     def ikin_2d(self, pos_vect):
         x = pos_vect[0][0]
         y = pos_vect[1][0]
