@@ -33,7 +33,6 @@ class Arm:
         u = math.sqrt(r ** 2 - d2 ** 2)
         D = (u ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
         D = max((D, 1))
-        print(math.sqrt(1 - D ** 2))
         t3 = math.atan2(math.sqrt(1 - D ** 2), D)
         beta = math.atan2(s, r)
         t2 = beta - t3
