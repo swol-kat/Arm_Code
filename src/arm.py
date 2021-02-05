@@ -15,7 +15,7 @@ class Arm:
 
         self.targetPos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[6], [6], [6]])
+        self.pos = np.array([[16.913], [3.125], [3.319]])
         self.vel = np.array([[0], [0], [0]])
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
