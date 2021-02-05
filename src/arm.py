@@ -17,7 +17,6 @@ class Arm:
         self.thetas = np.array([[0], [0], [0]])
         self.pos = np.array([[16.913], [3.125], [3.319]])
         self.vel = np.array([[0], [0], [0]])
-        self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
     def ikin(self, pos_vect):
@@ -33,7 +32,7 @@ class Arm:
         u = math.sqrt(r ** 2 - d2 ** 2)
         D = (u ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
         D = min((D, 1))
-        t3 = math.atan2(math.sqrt(1 - D ** 2), D)
+        t3 = math.atan2(- math.sqrt(1 - D ** 2), D)
         beta = math.atan2(s, r)
         gamma = math.atan2(a3*math.sin(t3),a2+a3*math.cos(t3))
         t2 = beta - gamma
@@ -130,9 +129,6 @@ class Arm:
         self.pos = self.fwkin()
 
         self.vel = np.array([[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
-
-        self.accel = np.array(
-            [[self.shoulder_axis.get_accel()], [self.upper_axis.get_accel()], [self.lower_axis.get_accel()]])
 
         self.torque = np.array(
             [[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
