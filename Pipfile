@@ -7,7 +7,7 @@ name = "pypi"
 numpy = "*"
 keyboard = "*"
 odrive = "*"
-pylint = "*"
+adafruit-circuitpython-bno055 = "*"
 
 [dev-packages]
 
