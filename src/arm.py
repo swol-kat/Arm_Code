@@ -43,8 +43,8 @@ class Arm:
     def send_to_pos(self, thetas):
         t1, t2, t3 = thetas.reshape(3)
         self.shoulder_axis.set_setpoint(t1)
-        self.shoulder_axis.set_setpoint(t2)
-        self.shoulder_axis.set_setpoint(t3)
+        self.upper_axis.set_setpoint(t2)
+        self.lower_axis.set_setpoint(t3)
 
     def go_to(self, target_pos, movement_time=.5):
         start_time = time.time()
@@ -62,6 +62,7 @@ class Arm:
 
             elapsed_time = time.time() - start_time
             time.sleep(.01)
+        self.pos = target_pos
 
         print('reached')
 
@@ -153,3 +154,8 @@ class Arm:
         self.shoulder_axis.enable_joint()
         self.upper_axis.enable_joint()
         self.lower_axis.enable_joint()
+
+    def fuck(self):
+        self.shoulder_axis.fuck()
+        self.upper_axis.fuck()
+        self.lower_axis.fuck()
