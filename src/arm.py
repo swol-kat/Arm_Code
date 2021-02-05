@@ -1,6 +1,10 @@
 import math
 import numpy as np
 from kinematics import htm
+import time
+from copy import copy
+from trajectory import quintic
+
 
 
 class Arm:
@@ -17,7 +21,7 @@ class Arm:
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
-    def go_to_2d(self, pos_vect):
+    def ikin_2d(self, pos_vect):
         x = pos_vect[0][0]
         y = pos_vect[1][0]
         theta1 = math.acos(
@@ -26,17 +30,43 @@ class Arm:
         theta2 = math.acos(
             (math.pow(self.armVars['A2'], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars['A3'], 2)) / (
                     2 * self.armVars['A2'] * self.armVars['A3'])) + theta1 - math.pi
-        self.upper_axis.set_setpoint(theta1)
-        self.lower_axis.set_setpoint(theta2)
+        self.upper_axis(theta1)
+        self.lower_axis(theta2)
 
-    def go_to_pos(self, pos_vect):
+    def ikin(self, pos_vect):
         self.targetPos = pos_vect
         theta1 = math.atan2(pos_vect[0][0], pos_vect[2][0]) + math.acos(
             self.armVars['A1'] / (math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(pos_vect[1][0], 2))))
         self.shoulder_axis.set_setpoint(theta1)
         L = math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(pos_vect[0][0], 2) - math.pow(self.armVars['A1'], 2))
         out_vec = np.array([[L], [pos_vect[1][0]], [0]])
-        self.go_to_2d(out_vec)
+        a = self.ikin_2d(out_vec)
+
+
+
+    def go_to(self,target_pos, movement_time=.5):
+        start_time = time.time()
+        elapsed_time = time.time() - start_time
+        start_pos = copy(self.pos)
+        diff = target_pos - start_pos
+        while elapsed_time <= movement_time:
+            perc_move= quintic(elapsed_time/movement_time)
+
+            new_target = diff * perc_move + start_pos
+
+            self.ikin(new_target)
+
+            elapsed_time = time.time()=start_time
+            time.sleep(.04)
+
+        print('reached')
+
+
+
+
+
+
+
 
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths

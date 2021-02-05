@@ -4,21 +4,15 @@ import odrive.enums
 from joint import Joint
 from arm import Arm
 import json
-
-
-
+import numpy as np
 
 print("finding Odrives")
 odrives = odrive.find_any(find_multiple=2)
-
-
 
 # Multiple Odrive setup:
 # Serial number for arm 1 lower and upper: 35593308029517
 # Serial number for arm 1 shoulder: 35623373914701
 axis_dict = json.loads(open('axis_config.json', "r").read())
-
-
 
 output_dict = {}
 for odrive in odrives:
