@@ -25,27 +25,26 @@ class Arm:
 
     def ikin(self, pos_vect):
         # position vect in X, Y, Z
-        theta1 = math.pi / 2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
+        theta1 = math.pi/2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
             (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
             /
-            (math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2)) * math.sqrt(
-                math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2)))
+            (math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) ) * math.sqrt( math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) -  math.pow(self.armVars['A1'], 2)))
         )
+
         L = math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
 
         theta2 = math.atan2(pos_vect[2][0], L) - math.pi + math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A2'], 2) - math.pow(
-                self.armVars['A3'], 2))
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A2'], 2) - math.pow(self.armVars['A3'], 2))
             /
-            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2) * self.armVars['A2']))
+            (2 * math.hypot(pos_vect[2][0], L) * self.armVars['A2'])
         )
 
         theta3 = math.pi * -1.0 - math.atan2(L, pos_vect[2][0]) - math.acos(
-            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A3'], 2) - math.pow(
-                self.armVars['A2'], 2))
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A3'], 2) - math.pow(self.armVars['A2'], 2))
             /
             (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2)) * self.armVars['A3'])
         )
+        
         self.shoulder_axis.set_setpoint(theta1)
         self.upper_axis.set_setpoint(theta2)
         self.lower_axis.set_setpoint(theta3)
