@@ -56,8 +56,8 @@ class Arm:
 
             self.ikin(new_target)
 
-            elapsed_time = time.time()=start_time
-            time.sleep(.04)
+            elapsed_time = time.time()-start_time
+            time.sleep(.01)
 
         print('reached')
 
