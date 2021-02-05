@@ -56,6 +56,7 @@ class Joint:
         self.odrive_axis.encoder.set_linear_count(0)
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
         self.odrive_axis.controller.input_pos = 0.0
+        """
         while True:
             if keyboard.is_pressed('left'):
                 self.odrive_axis.controller.input_pos += 0.01
@@ -64,6 +65,7 @@ class Joint:
             if keyboard.is_pressed('space'):
                 break
             time.sleep(0.05)
+        """
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_IDLE
         self.odrive_axis.encoder.set_linear_count(0)
         time.sleep(1)

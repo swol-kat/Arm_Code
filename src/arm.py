@@ -62,12 +62,6 @@ class Arm:
         print('reached')
 
 
-
-
-
-
-
-
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths
         # F_tip = T * J(q)
