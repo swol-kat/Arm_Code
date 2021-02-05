@@ -35,7 +35,8 @@ class Arm:
         D = min((D, 1))
         t3 = math.atan2(math.sqrt(1 - D ** 2), D)
         beta = math.atan2(s, r)
-        t2 = beta - t3
+        gamma = math.atan2(a3*math.sin(t3),a2+a3*math.cos(t3))
+        t2 = beta - gamma
 
         return np.array([t1, t2, t3]).reshape((3, 1))
 
