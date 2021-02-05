@@ -109,12 +109,12 @@ class Arm:
         # calculate fwkin
         for i in range(joint - 1):
             params = dh_table[i]
-            dh_table[0] += thetas[0, i]
+            dh_table[0] += thetas[i][0]
             t_final *= htm(*params)
 
         # if vector retun just the pos var
         if vector:
-            return t_final[0:3, 3]
+            return t_final[0:3][3]
 
         return t_final
 
