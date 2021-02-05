@@ -21,28 +21,34 @@ class Arm:
         self.accel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
-        self.update()
 
-    def ikin_2d(self, pos_vect):
-        x = pos_vect[0][0]
-        y = pos_vect[1][0]
-        theta1 = math.acos(
-            (math.pow(self.armVars['A2'], 2) + math.pow(x, 2) + math.pow(y, 2) - math.pow(self.armVars['A3'], 2)) / (
-                    2 * self.armVars['A2'] * math.sqrt(math.pow(x, 2) + math.pow(y, 2)))) - math.atan2(x, y)
-        theta2 = math.acos(
-            (math.pow(self.armVars['A2'], 2) - math.pow(x, 2) - math.pow(y, 2) + math.pow(self.armVars['A3'], 2)) / (
-                    2 * self.armVars['A2'] * self.armVars['A3'])) + theta1 - math.pi
-        self.upper_axis.set_setpoint(theta1)
-        self.lower_axis.set_setpoint(theta2)
 
     def ikin(self, pos_vect):
-        self.targetPos = pos_vect
-        theta1 = math.atan2(pos_vect[0][0], pos_vect[2][0]) + math.acos(
-            self.armVars['A1'] / (math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(pos_vect[1][0], 2))))
+        # position vect in X, Y, Z
+        theta1 = math.pi / 2 - math.atan2(pos_vect[0][0], pos_vect[1][0]) - math.acos(
+            (math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
+            /
+            (math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2)) * math.sqrt(
+                math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2)))
+        )
+        L = math.sqrt(math.pow(pos_vect[0][0], 2) + math.pow(pos_vect[1][0], 2) - math.pow(self.armVars['A1'], 2))
+
+        theta2 = math.atan2(pos_vect[2][0], L) - math.pi + math.acos(
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A2'], 2) - math.pow(
+                self.armVars['A3'], 2))
+            /
+            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2) * self.armVars['A2']))
+        )
+
+        theta3 = math.pi * -1.0 - math.atan2(L, pos_vect[2][0]) - math.acos(
+            (math.pow(pos_vect[2][0], 2) + math.pow(L, 2) + math.pow(self.armVars['A3'], 2) - math.pow(
+                self.armVars['A2'], 2))
+            /
+            (2 * math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(L, 2)) * self.armVars['A3'])
+        )
         self.shoulder_axis.set_setpoint(theta1)
-        L = math.sqrt(math.pow(pos_vect[2][0], 2) + math.pow(pos_vect[0][0], 2) - math.pow(self.armVars['A1'], 2))
-        out_vec = np.array([[L], [pos_vect[1][0]], [0]])
-        a = self.ikin_2d(out_vec)
+        self.upper_axis.set_setpoint(theta2)
+        self.lower_axis.set_setpoint(theta3)
 
 
 
@@ -55,10 +61,8 @@ class Arm:
             perc_move = quintic(elapsed_time/movement_time)
 
             new_target = diff * perc_move + start_pos
-            try:
-                self.ikin(new_target)
-            except:
-                self.ikin_2d(new_target)
+
+            self.ikin(new_target)
 
             elapsed_time = time.time()-start_time
             time.sleep(.01)
