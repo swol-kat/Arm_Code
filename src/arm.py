@@ -114,6 +114,7 @@ class Arm:
 
         # if vector retun just the pos var
         if vector:
+            print(t_final)
             return t_final[0:3][3]
 
         return t_final
