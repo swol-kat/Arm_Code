@@ -54,7 +54,7 @@ class Arm:
 
             new_target = diff * perc_move + start_pos
 
-            self.ikin(new_target)
+            self.ikin_2d(new_target)
 
             elapsed_time = time.time()-start_time
             time.sleep(.01)
