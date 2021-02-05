@@ -50,10 +50,10 @@ class Arm:
         start_pos = copy(self.pos)
         diff = target_pos - start_pos
         while elapsed_time <= movement_time:
-            perc_move= quintic(elapsed_time/movement_time)
+            perc_move = quintic(elapsed_time/movement_time)
 
             new_target = diff * perc_move + start_pos
-
+            print(new_target)
             self.ikin_2d(new_target)
 
             elapsed_time = time.time()-start_time
