@@ -37,6 +37,10 @@ class Arm:
         gamma = math.atan2(a3*math.sin(t3),a2+a3*math.cos(t3))
         t2 = beta - gamma
 
+        t3 *= -1.0 #make this better
+        t2 *= -1.0
+
+
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
@@ -44,6 +48,11 @@ class Arm:
         self.shoulder_axis.set_setpoint(t1)
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
+
+    def go_to_raw(self, target_pos):
+        thetas = self.ikin(new_target)
+        self.send_to_pos(thetas)
+
 
     def go_to(self, target_pos, movement_time=.5):
         start_time = time.time()
