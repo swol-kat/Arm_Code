@@ -19,7 +19,7 @@ class Arm:
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
-    def ikin(self, pos_vect):
+    def ikin(self, pos_vect, dog: True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
         # theta 1
@@ -32,7 +32,7 @@ class Arm:
         u = math.sqrt(r ** 2 - d2 ** 2)
         D = (u ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
         D = min((D, 1))
-        t3 = math.atan2(- math.sqrt(1 - D ** 2), D)
+        t3 = math.atan2(math.sqrt(1 - D ** 2), D)
         beta = math.atan2(s, r)
         gamma = math.atan2(a3*math.sin(t3),a2+a3*math.cos(t3))
         t2 = beta - gamma
