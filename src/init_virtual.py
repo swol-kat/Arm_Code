@@ -5,7 +5,7 @@ import numpy as np
 
 arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
-single_arm = Arm(VirtualJoint(),VirtualJoint(),VirtualJoint(), arm_variables)
+single_arm = Arm(VirtualJoint(True),VirtualJoint(False),VirtualJoint(True), arm_variables, True)
 
 single_arm.calibrate_arm()
 

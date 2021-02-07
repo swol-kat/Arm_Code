@@ -4,10 +4,11 @@ from kinematics import htm
 import time
 from copy import copy
 from trajectory import quintic
+from stick_plot import Plot
 
 
 class Arm:
-    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars):
+    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
         self.lower_axis = lower_axis
         self.upper_axis = upper_axis
         self.shoulder_axis = shoulder_axis
@@ -19,25 +20,28 @@ class Arm:
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
+        if plot:
+            self.plot = Plot()
+
         self.update()
 
-    def ikin(self, pos_vect, dog: True):
+    def ikin(self, pos_vect, dog=True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
         print(f'x: {x}, y: {y}, z: {z}')
         print(f'd1: {d1}, d2: {d2}, a2: {a2}, a3: {a3}')
         z -= d1
-        L = math.sqrt(y**2 + x**2 - d2**2)
+        L = math.sqrt(y ** 2 + x ** 2 - d2 ** 2)
         # theta 1
-        t1 = math.atan2(y, x * -1.0) + math.acos(L/math.hypot(x, y)) - math.pi
+        t1 = math.atan2(y, x * -1.0) + math.acos(L / math.hypot(x, y)) - math.pi
         # theta 2 and 3
         a = -1.0 * math.atan2(z, L)
-        if(dog):
-            t2 = a + math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
-            t3 = a - math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
+        if dog:
+            t2 = a + math.acos((a2 ** 2 + z ** 2 + L ** 2 - a3 ** 2) / (2 * math.hypot(z, L) * a2))
+            t3 = a - math.acos((a3 ** 2 + z ** 2 + L ** 2 - a2 ** 2) / (2 * math.hypot(z, L) * a3))
         else:
-            t2 = a - math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2)) + math.pi/2
-            t3 = a + math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3)) - math.pi/2
+            t2 = a - math.acos((a2 ** 2 + z ** 2 + L ** 2 - a3 ** 2) / (2 * math.hypot(z, L) * a2)) + math.pi / 2
+            t3 = a + math.acos((a3 ** 2 + z ** 2 + L ** 2 - a2 ** 2) / (2 * math.hypot(z, L) * a3)) - math.pi / 2
         print(f'z: {z}, L: {L}, t1: {t1}, a: {a}, t2: {t2}, t3: {t3}')
 
         return np.array([t1, t2, t3]).reshape((3, 1))
@@ -52,13 +56,13 @@ class Arm:
         thetas = self.ikin(target_pos, True)
         self.send_to_pos(thetas)
 
-
     def go_to(self, target_pos, movement_time=.5):
         start_time = time.time()
         elapsed_time = time.time() - start_time
         start_pos = copy(self.pos)
         diff = target_pos - start_pos
         while elapsed_time <= movement_time:
+
             perc_move = quintic(elapsed_time / movement_time)
 
             new_target = diff * perc_move + start_pos
@@ -68,8 +72,9 @@ class Arm:
             self.send_to_pos(thetas)
 
             elapsed_time = time.time() - start_time
+            self.update()
             time.sleep(.01)
-        self.pos = target_pos
+
 
         print('reached')
 
@@ -97,7 +102,7 @@ class Arm:
 
         return np.delete(J, 0, 1)
 
-    def fwkin(self, thetas=None, joint=3, vector=True):
+    def fwkin(self, thetas=None, joint=4, vector=True):
         """
         converts joint angles stored in self.thetas to workspace returns:
         [float]  returns a either a 4x4 matrix of the transform from joint 1 to the input joint or a 3x1 vector
@@ -107,15 +112,17 @@ class Arm:
         if not thetas:
             thetas = self.thetas
 
-        dh_table = [[0, self.arm_vars['D1'], 0, - math.pi / 2],
-                    [0, self.arm_vars['D2'], self.arm_vars['A2'], 0],
-                    [0, 0, self.arm_vars['A3'], 0]]
+        t1,t2,t3 = thetas.reshape(3)
+
+        dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
+                    [0, self.arm_vars['D2'], 0, 0],
+                    [t2, 0, self.arm_vars['A2'], 0],
+                    [t3, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
         for i in range(joint):
             params = dh_table[i]
-            params[0] += thetas[i, 0]
             t_final = t_final @ htm(*params)
         # if vector retun just the pos var
         if vector:
@@ -140,6 +147,9 @@ class Arm:
 
         self.torque = np.array(
             [[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
+
+        if self.plot:
+            self.plot.plot(self)
 
     def home_arm(self):
         print("homing shoudler")

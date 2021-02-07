@@ -2,8 +2,9 @@ import time
 import numpy as np
 
 class VirtualJoint:
-    def __init__(self):
+    def __init__(self, invert = False):
         self.pos = float(0)
+        self.invert = invert
 
     def calibrate_joint(self):
         cal_time = 2
@@ -17,6 +18,8 @@ class VirtualJoint:
 
     def set_setpoint(self, angle):
         self.pos = float(angle)
+        if self.invert:
+            self.pos = -self.pos
 
     def set_torque(self, torque):  # set torque in N*M
         pass
