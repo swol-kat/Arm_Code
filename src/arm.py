@@ -18,36 +18,31 @@ class Arm:
         self.pos = np.array([[0], [0], [0]])
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
-
+        self.plot = False
         if plot:
             self.plot = Plot()
 
         self.update()
 
-    def ikin(self, pos_vect, dog=True):
+    def ikin(self, pos_vect, dog: True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
-        # t1
-        r = math.hypot(x, y)
-        u = math.sqrt(r ** 2 - d2 ** 2)
-        alpha = math.atan2(y, x)
-        beta = math.atan2(d2, u)
-
-        t1 = alpha - beta
-
-        s = z - d1
-        l = math.hypot(s, u)
-        D = (l ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
-        # making sure D doesnt excced -1 one cause floating points
-        D = min(max(D, -1), 1)
-        # t2
-        if dog:
-            t3 = - math.atan2(math.sqrt(1 - D ** 2), D)
+        #print(f'x: {x}, y: {y}, z: {z}')
+        #print(f'd1: {d1}, d2: {d2}, a2: {a2}, a3: {a3}')
+        z -= d1
+        L = math.sqrt(y**2 + x**2 - d2**2)
+        # theta 1
+        t1 = math.pi - math.atan2(y, x * -1.0) - math.acos(L/math.hypot(x, y))
+        # theta 2 and 3
+        a = -1.0 * math.atan2(z, L)
+        if(dog):
+            t2 = a + math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
+            t3 = a - math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
         else:
-            t3 = - math.atan2(- math.sqrt(1 - D ** 2), D)
-        phi = math.atan2(s, u)
-        gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
-        t2 = - (gamma + phi)
+            t2 = a - math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
+            t3 = a + math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
+        #print(f'z: {z}, L: {L}, t1: {t1}, a: {a}, t2: {t2}, t3: {t3}')
+
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
