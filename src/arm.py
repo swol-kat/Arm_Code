@@ -2,7 +2,6 @@ import math
 import numpy as np
 from kinematics import htm
 import time
-from copy import copy
 from trajectory import quintic
 from stick_plot import Plot
 
@@ -126,9 +125,7 @@ class Arm:
             t_final = t_final @ htm(*params)
         # if vector retun just the pos var
         if vector:
-            v = copy(t_final[0:3, 3])
-            v.resize(3, 1)
-            return v
+            return t_final[0:3, 3].reshape(3,1)
 
         return t_final
 
