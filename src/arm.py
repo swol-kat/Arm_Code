@@ -15,9 +15,11 @@ class Arm:
 
         self.targetPos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[16.913], [3.125], [3.319]])
+        self.pos = np.array([[0], [0], [0]])
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
+
+        self.update()
 
     def ikin(self, pos_vect, dog: True):
         x, y, z = pos_vect.reshape(3)

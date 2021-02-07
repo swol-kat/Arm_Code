@@ -10,6 +10,7 @@ odrive = "*"
 adafruit-circuitpython-bno055 = "*"
 
 [dev-packages]
+jupyter = "*"
 
 [requires]
 python_version = "3.9"
