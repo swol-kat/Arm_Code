@@ -2,17 +2,17 @@
     "35593308029517": {
         "axis1": {
             "name": "1 lower",
-            "ratio": 9.0
+            "ratio": -9.0
         },
         "axis0": {
             "name": "1 upper",
-            "ratio": 9.0
+            "ratio": -9.0
         }
     },
     "35623373914701": {
         "axis1": {
             "name": "1 shoulder",
-            "ratio": 5.0
+            "ratio": -5.0
         },
         "axis0": {
             "name": "2 shoulder",

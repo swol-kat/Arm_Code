@@ -22,24 +22,21 @@ class Arm:
     def ikin(self, pos_vect, dog: True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
+        print(f'x: {x}, y: {y}, z: {z}')
+        print(f'd1: {d1}, d2: {d2}, a2: {a2}, a3: {a3}')
+        z -= d1
+        L = math.sqrt(y**2 + x**2 - d2**2)
         # theta 1
-        phi = math.atan2(y, x)
-        r = math.hypot(x, y)
-        alph = math.atan2(d2, math.sqrt(r ** 2 - d2 ** 2))
-        t1 = phi - alph
+        t1 = math.atan2(y, x * -1.0) + math.acos(L/math.hypot(x, y)) - math.pi
         # theta 2 and 3
-        s = z - d1
-        u = math.sqrt(r ** 2 - d2 ** 2)
-        D = (u ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
-        D = min((D, 1))
-        t3 = math.atan2(math.sqrt(1 - D ** 2), D)
-        beta = math.atan2(s, r)
-        gamma = math.atan2(a3*math.sin(t3),a2+a3*math.cos(t3))
-        t2 = beta - gamma
-
-        t3 *= -1.0 #make this better
-        t2 *= -1.0
-
+        a = -1.0 * math.atan2(z, L)
+        if(dog):
+            t2 = a + math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
+            t3 = a - math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
+        else:
+            t2 = a - math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2)) + math.pi/2
+            t3 = a + math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3)) - math.pi/2
+        print(f'z: {z}, L: {L}, t1: {t1}, a: {a}, t2: {t2}, t3: {t3}')
 
         return np.array([t1, t2, t3]).reshape((3, 1))
 
@@ -50,7 +47,7 @@ class Arm:
         self.lower_axis.set_setpoint(t3)
 
     def go_to_raw(self, target_pos):
-        thetas = self.ikin(new_target)
+        thetas = self.ikin(target_pos, True)
         self.send_to_pos(thetas)
 
 
