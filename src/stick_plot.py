@@ -12,7 +12,7 @@ class Plot:
         # self.ax = self.fig.add_subplot(111, projection='3d')
         self.ax.set_xlim([-20, 20])
         self.ax.set_ylim([-20, 20])
-        self.ax.set_zlim([-20, 20])
+        self.ax.set_zlim([0, 20])
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')

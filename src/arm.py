@@ -4,7 +4,7 @@ from kinematics import htm
 import time
 from trajectory import quintic
 from stick_plot import Plot
-
+from copy import copy
 
 class Arm:
     def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
@@ -27,22 +27,27 @@ class Arm:
     def ikin(self, pos_vect, dog=True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
-        print(f'x: {x}, y: {y}, z: {z}')
-        print(f'd1: {d1}, d2: {d2}, a2: {a2}, a3: {a3}')
-        z -= d1
-        L = math.sqrt(y ** 2 + x ** 2 - d2 ** 2)
-        # theta 1
-        t1 = math.atan2(y, x * -1.0) + math.acos(L / math.hypot(x, y)) - math.pi
-        # theta 2 and 3
-        a = -1.0 * math.atan2(z, L)
-        if dog:
-            t2 = a + math.acos((a2 ** 2 + z ** 2 + L ** 2 - a3 ** 2) / (2 * math.hypot(z, L) * a2))
-            t3 = a - math.acos((a3 ** 2 + z ** 2 + L ** 2 - a2 ** 2) / (2 * math.hypot(z, L) * a3))
-        else:
-            t2 = a - math.acos((a2 ** 2 + z ** 2 + L ** 2 - a3 ** 2) / (2 * math.hypot(z, L) * a2)) + math.pi / 2
-            t3 = a + math.acos((a3 ** 2 + z ** 2 + L ** 2 - a2 ** 2) / (2 * math.hypot(z, L) * a3)) - math.pi / 2
-        print(f'z: {z}, L: {L}, t1: {t1}, a: {a}, t2: {t2}, t3: {t3}')
+        # t1
+        r = math.hypot(x, y)
+        u = math.sqrt(r ** 2 - d2 ** 2)
+        alpha = math.atan2(y, x)
+        beta = math.atan2(d2, u)
 
+        t1 = alpha - beta
+
+        s = z - d1
+        l = math.hypot(s, u)
+        D = (l ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+        # making sure D doesnt excced -1 one cause floating points
+        D = min(max(D, -1), 1)
+        # t2
+        if dog:
+            t3 = - math.atan2(math.sqrt(1 - D ** 2), D)
+        else:
+            t3 = - math.atan2(- math.sqrt(1 - D ** 2), D)
+        phi = math.atan2(s, u)
+        gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
+        t2 = - (gamma + phi)
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
@@ -51,29 +56,27 @@ class Arm:
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
 
-    def go_to_raw(self, target_pos):
-        thetas = self.ikin(target_pos, True)
+    def go_to_raw(self, target_pos, dog = True):
+        thetas = self.ikin(target_pos, dog)
         self.send_to_pos(thetas)
+        self.update()
 
-    def go_to(self, target_pos, movement_time=.5):
+    def go_to(self, target_pos, movement_time=.5, dog =True):
         start_time = time.time()
         elapsed_time = time.time() - start_time
         start_pos = copy(self.pos)
         diff = target_pos - start_pos
         while elapsed_time <= movement_time:
-
             perc_move = quintic(elapsed_time / movement_time)
 
             new_target = diff * perc_move + start_pos
 
-            thetas = self.ikin(new_target)
-            print(thetas)
+            thetas = self.ikin(new_target, dog)
             self.send_to_pos(thetas)
 
             elapsed_time = time.time() - start_time
             self.update()
             time.sleep(.01)
-
 
         print('reached')
 
@@ -108,10 +111,10 @@ class Arm:
                  depending on the vector variable
         """
         # dh table
-        if not thetas:
+        if thetas is None:
             thetas = self.thetas
 
-        t1,t2,t3 = thetas.reshape(3)
+        t1, t2, t3 = thetas.reshape(3)
 
         dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
                     [0, self.arm_vars['D2'], 0, 0],
@@ -125,7 +128,7 @@ class Arm:
             t_final = t_final @ htm(*params)
         # if vector retun just the pos var
         if vector:
-            return t_final[0:3, 3].reshape(3,1)
+            return t_final[0:3, 3].reshape(3, 1)
 
         return t_final
 
