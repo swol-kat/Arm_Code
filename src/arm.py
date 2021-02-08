@@ -99,7 +99,7 @@ class Arm:
 
         return np.delete(J, 0, 1)
 
-    def fwkin(self, thetas=None, joint=4, vector=True):
+    def fwkin(self, thetas=None, joint=3, vector=True):
         """
         converts joint angles stored in self.thetas to workspace returns:
         [float]  returns a either a 4x4 matrix of the transform from joint 1 to the input joint or a 3x1 vector
@@ -110,10 +110,9 @@ class Arm:
             thetas = self.thetas
 
         t1, t2, t3 = thetas.reshape(3)
-
+                    #theta, D, A, alpha
         dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
-                    [0, self.arm_vars['D2'], 0, 0],
-                    [t2, 0, self.arm_vars['A2'], 0],
+                    [t2, self.arm_vars['D2'], self.arm_vars['A2'], 0],
                     [t3, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
