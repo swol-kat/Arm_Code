@@ -1,7 +1,7 @@
 import odrive
 import odrive.enums
 
-from joint import Joint
+from arm.joint import Joint
 from arm import Arm
 import json
 import numpy as np

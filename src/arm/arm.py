@@ -1,9 +1,10 @@
 import math
 import numpy as np
-from kinematics import htm
+
 import time
-from trajectory import quintic
-from stick_plot import Plot
+from .util.kinematics import htm
+from .util import quintic
+from .util import Plot
 from copy import copy
 
 class Arm:
@@ -13,14 +14,16 @@ class Arm:
         self.shoulder_axis = shoulder_axis
         self.arm_vars = arm_vars
 
-        self.targetPos = np.array([[0], [0], [0]])
+        self.target_pos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[0], [0], [0]])
+        self.pos = np.array([[0.], [0.], [0.]])
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
 
+        self.plot=False
         if plot:
             self.plot = Plot()
+
 
         self.update()
 
@@ -126,7 +129,7 @@ class Arm:
         for i in range(joint):
             params = dh_table[i]
             t_final = t_final @ htm(*params)
-        # if vector retun just the pos var
+        # if vector return just the pos var
         if vector:
             return t_final[0:3, 3].reshape(3, 1)
 
@@ -173,3 +176,37 @@ class Arm:
         self.shoulder_axis.fuck()
         self.upper_axis.fuck()
         self.lower_axis.fuck()
+
+
+    def get_joint_pos(self):
+        xs = [0]
+        ys = [0]
+        zs = [0]
+        for i in range(4):
+            pos = self.fwkin(joint=i + 1)
+            x, y, z = pos.reshape(3)
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+        return {
+            'x': xs,
+            'y': ys,
+            'z': zs
+        }
+
+    def jog(self,thetas,pos):
+        if thetas and np.sum(thetas) != 0:
+            thetas = np.array(thetas).reshape((3,1))
+            self.send_to_pos(self.thetas + thetas)
+        if pos and np.sum(pos) != 0:
+            pos = np.array(pos).reshape((3, 1))
+            self.go_to_raw(self.pos+pos,False)
+
+    def export_data(self):
+        return {
+            'joint_pos': self.get_joint_pos(),
+            'thetas': self.thetas.reshape(3).tolist(),
+            'pos': self.pos.reshape(3).tolist(),
+            'vel': self.vel.reshape(3).tolist(),
+            'torque': self.torque.reshape(3).tolist(),
+        }
