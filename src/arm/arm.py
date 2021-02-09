@@ -1,9 +1,10 @@
 import math
 import numpy as np
-from kinematics import htm
+
 import time
-from trajectory import quintic
-from stick_plot import Plot
+from .util.kinematics import htm
+from .util import quintic
+from .util import Plot
 from copy import copy
 
 class Arm:
@@ -13,36 +14,44 @@ class Arm:
         self.shoulder_axis = shoulder_axis
         self.arm_vars = arm_vars
 
-        self.targetPos = np.array([[0], [0], [0]])
+        self.target_pos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
-        self.pos = np.array([[0], [0], [0]])
+        self.pos = np.array([[0.], [0.], [0.]])
         self.vel = np.array([[0], [0], [0]])
         self.torque = np.array([[0], [0], [0]])
-        self.plot = False
+
+        self.plot=False
         if plot:
             self.plot = Plot()
 
+
         self.update()
 
-    def ikin(self, pos_vect, dog: True):
+    def ikin(self, pos_vect, dog=True):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
-        #print(f'x: {x}, y: {y}, z: {z}')
-        #print(f'd1: {d1}, d2: {d2}, a2: {a2}, a3: {a3}')
-        z -= d1
-        L = math.sqrt(y**2 + x**2 - d2**2)
-        # theta 1
-        t1 = math.pi - math.atan2(y, x * -1.0) - math.acos(L/math.hypot(x, y))
-        # theta 2 and 3
-        a = -1.0 * math.atan2(z, L)
-        if(dog):
-            t2 = a + math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
-            t3 = a - math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
-        else:
-            t2 = a - math.acos((a2**2 + z**2 + L**2 - a3**2)/(2 * math.hypot(z, L) * a2))
-            t3 = a + math.acos((a3**2 + z**2 + L**2 - a2**2)/(2 * math.hypot(z, L) * a3))
-        #print(f'z: {z}, L: {L}, t1: {t1}, a: {a}, t2: {t2}, t3: {t3}')
+        # t1
+        r = math.hypot(x, y)
+        u = math.sqrt(r ** 2 - d2 ** 2)
+        alpha = math.atan2(y, x)
+        beta = math.atan2(d2, u)
 
+        t1 = alpha - beta
+
+        s = z - d1
+        l = math.hypot(s, u)
+        D = (l ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+        # making sure D doesnt excced -1 one cause floating points
+        D = min(max(D, -1), 1)
+        # t2
+        if dog:
+            t3 = - math.atan2(math.sqrt(1 - D ** 2), D)
+        else:
+            t3 = - math.atan2(- math.sqrt(1 - D ** 2), D)
+        phi = math.atan2(s, u)
+        gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
+        t2 = - (gamma + phi)
+        t3 = t2 + t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
@@ -99,7 +108,7 @@ class Arm:
 
         return np.delete(J, 0, 1)
 
-    def fwkin(self, thetas=None, joint=3, vector=True):
+    def fwkin(self, thetas=None, joint=4, vector=True):
         """
         converts joint angles stored in self.thetas to workspace returns:
         [float]  returns a either a 4x4 matrix of the transform from joint 1 to the input joint or a 3x1 vector
@@ -110,17 +119,18 @@ class Arm:
             thetas = self.thetas
 
         t1, t2, t3 = thetas.reshape(3)
-                    #theta, D, A, alpha
+
         dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
-                    [t2, self.arm_vars['D2'], self.arm_vars['A2'], 0],
-                    [t3, 0, self.arm_vars['A3'], 0]]
+                    [0, self.arm_vars['D2'], 0, 0],
+                    [t2, 0, self.arm_vars['A2'], 0],
+                    [t3-t2, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
         for i in range(joint):
             params = dh_table[i]
             t_final = t_final @ htm(*params)
-        # if vector retun just the pos var
+        # if vector return just the pos var
         if vector:
             return t_final[0:3, 3].reshape(3, 1)
 
@@ -167,3 +177,37 @@ class Arm:
         self.shoulder_axis.fuck()
         self.upper_axis.fuck()
         self.lower_axis.fuck()
+
+
+    def get_joint_pos(self):
+        xs = [0]
+        ys = [0]
+        zs = [0]
+        for i in range(4):
+            pos = self.fwkin(joint=i + 1)
+            x, y, z = pos.reshape(3)
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+        return {
+            'x': xs,
+            'y': ys,
+            'z': zs
+        }
+
+    def jog(self,thetas,pos):
+        if thetas and np.sum(thetas) != 0:
+            thetas = np.array(thetas).reshape((3,1))
+            self.send_to_pos(self.thetas + thetas)
+        if pos and np.sum(pos) != 0:
+            pos = np.array(pos).reshape((3, 1))
+            self.go_to_raw(self.pos+pos,False)
+
+    def export_data(self):
+        return {
+            'joint_pos': self.get_joint_pos(),
+            'thetas': self.thetas.reshape(3).tolist(),
+            'pos': self.pos.reshape(3).tolist(),
+            'vel': self.vel.reshape(3).tolist(),
+            'torque': self.torque.reshape(3).tolist(),
+        }

@@ -8,6 +8,10 @@ numpy = "*"
 keyboard = "*"
 odrive = "*"
 adafruit-circuitpython-bno055 = "*"
+flask-socketio = "*"
+flask-cors = "*"
+eventlet = "*"
+flask = "*"
 
 [dev-packages]
 jupyter = "*"
