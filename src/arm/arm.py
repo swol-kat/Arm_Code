@@ -51,7 +51,7 @@ class Arm:
         phi = math.atan2(s, u)
         gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
         t2 = - (gamma + phi)
-        t3 = t2 - t3
+        t3 = t2 + t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
