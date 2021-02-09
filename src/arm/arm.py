@@ -51,6 +51,7 @@ class Arm:
         phi = math.atan2(s, u)
         gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
         t2 = - (gamma + phi)
+        t3 = t2 - t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
     def send_to_pos(self, thetas):
@@ -122,7 +123,7 @@ class Arm:
         dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
                     [0, self.arm_vars['D2'], 0, 0],
                     [t2, 0, self.arm_vars['A2'], 0],
-                    [t3, 0, self.arm_vars['A3'], 0]]
+                    [t3-t2, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
