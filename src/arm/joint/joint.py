@@ -2,8 +2,6 @@ import odrive
 import odrive.enums
 import math
 import time
-import keyboard
-
 
 class Joint:
     def __init__(self, odrive_axis, gear_ratio):
@@ -14,7 +12,8 @@ class Joint:
     def calibrate_joint(self):
         self.odrive_axis.clear_errors()
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-        while self.odrive_axis.current_state != odrive.enums.AXIS_STATE_IDLE:
+        t_start = time.time()
+        while self.odrive_axis.current_state != odrive.enums.AXIS_STATE_IDLE and t_start + 10 > time.time():
             time.sleep(0.1)
 
     def enable_joint(self):
