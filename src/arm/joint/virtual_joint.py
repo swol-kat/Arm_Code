@@ -50,3 +50,8 @@ class VirtualJoint:
 
     def run_manual_homing_routine(self):
         self.set_setpoint(0)
+
+    def get_error(self):
+        return {
+            'axis': 'haha axis go brr'
+        }

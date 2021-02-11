@@ -35,5 +35,5 @@ def setup():
 
     return single_arm
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     setup()

@@ -11,7 +11,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 
-
+arm = None
 
 #serves html
 @app.route('/')
@@ -19,9 +19,9 @@ def load_dashboard():
     return render_template('index.html')
 
 @socketio.on('setup')
-def setup():
+def setup_arm():
     global arm
-    if not arm:
+    if arm is None:
         arm = setup()
 
 @socketio.on('fuck')
@@ -41,7 +41,8 @@ def calibrate():
 
 @socketio.on('get_error')
 def get_error():
-    emit('error', arm.get_error())
+    if arm:
+        emit('error', arm.get_error())
 
 
 @socketio.on('get_update')
@@ -53,19 +54,20 @@ def update_arm():
 
 @socketio.on('jog')
 def jog(data):
-    amount = float(data['amount'])
-    packet = {
-        't1': 0,
-        't2': 0,
-        't3': 0,
-        'x': 0,
-        'y': 0,
-        'z': 0,
-    }
-    packet[data['axis']] += amount
-    packet= list(packet.values())
+    if arm:
+        amount = float(data['amount'])
+        packet = {
+            't1': 0,
+            't2': 0,
+            't3': 0,
+            'x': 0,
+            'y': 0,
+            'z': 0,
+        }
+        packet[data['axis']] += amount
+        packet= list(packet.values())
 
-    arm.jog(packet[:3], packet[3:])
+        arm.jog(packet[:3], packet[3:])
 
 
 if __name__ == '__main__':
