@@ -17,10 +17,10 @@ def setup():
     axis_dict = json.loads(open('axis_config.json', "r").read())
 
     output_dict = {}
-    for odrive in odrives:
-        c = axis_dict[str(odrive.serial_number)]
-        output_dict[c['axis1']['name']] = Joint(odrive.axis1, c['axis1']['ratio'])
-        output_dict[c['axis0']['name']] = Joint(odrive.axis0, c['axis0']['ratio'])
+    for od in odrives:
+        c = axis_dict[str(od.serial_number)]
+        output_dict[c['axis1']['name']] = Joint(od.axis1, c['axis1']['ratio'])
+        output_dict[c['axis0']['name']] = Joint(od.axis0, c['axis0']['ratio'])
 
     arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
@@ -34,3 +34,6 @@ def setup():
     print("Setup Complete!")
 
     return single_arm
+
+if __name__ == "__main__":
+    setup()
