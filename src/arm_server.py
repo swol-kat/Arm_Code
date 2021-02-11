@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 
-#from init_virtual import setup
+# from init_virtual import setup
 from init_odrive import setup
 
 app = Flask(__name__)
@@ -10,13 +10,14 @@ app.config['SECRET_KEY'] = 'secret!'
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
 arm = None
 
-#serves html
+
+# serves html
 @app.route('/')
 def load_dashboard():
     return render_template('index.html')
+
 
 @socketio.on('setup')
 def setup_arm():
@@ -24,20 +25,24 @@ def setup_arm():
     if arm is None:
         arm = setup()
 
+
 @socketio.on('fuck')
 def fuck():
     if arm:
         arm.fuck()
+
 
 @socketio.on('home')
 def home():
     if arm:
         arm.home_arm()
 
+
 @socketio.on('calibrate')
 def calibrate():
     if arm:
         arm.calibrate_arm()
+
 
 @socketio.on('get_error')
 def get_error():
@@ -52,6 +57,7 @@ def update_arm():
         data = arm.export_data()
         emit('update', data)
 
+
 @socketio.on('jog')
 def jog(data):
     if arm:
@@ -65,7 +71,7 @@ def jog(data):
             'z': 0,
         }
         packet[data['axis']] += amount
-        packet= list(packet.values())
+        packet = list(packet.values())
 
         arm.jog(packet[:3], packet[3:])
 

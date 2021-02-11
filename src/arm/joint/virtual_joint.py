@@ -1,15 +1,16 @@
 import time
 import numpy as np
 
+
 class VirtualJoint:
-    def __init__(self, invert = False):
+    def __init__(self, invert=False):
         self.pos = float(0)
         self.invert = invert
 
     def calibrate_joint(self):
         cal_time = 2
         step = .01
-        for i in np.linspace(self.pos, cal_time, int((cal_time-self.pos/step))):
+        for i in np.linspace(self.pos, cal_time, int((cal_time - self.pos / step))):
             self.set_setpoint(i)
             time.sleep(step)
 
