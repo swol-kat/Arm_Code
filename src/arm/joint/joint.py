@@ -68,3 +68,10 @@ class Joint:
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_IDLE
         self.odrive_axis.encoder.set_linear_count(0)
         time.sleep(1)
+
+    def get_error(self):
+        return {
+            'motor': hex(self.odrive_axis.motor.error),
+            'encoder': hex(self.odrive_axis.encoder.error),
+            'controller': hex(self.odrive_axis.controller.error)
+        }

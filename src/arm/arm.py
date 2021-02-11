@@ -211,3 +211,10 @@ class Arm:
             'vel': self.vel.reshape(3).tolist(),
             'torque': self.torque.reshape(3).tolist(),
         }
+
+    def get_error(self):
+        return {
+            'shoulder': self.shoulder_axis.get_error(),
+            'upper': self.upper_axis.get_error(),
+            'lower': self.lower_axis.get_error()
+        }

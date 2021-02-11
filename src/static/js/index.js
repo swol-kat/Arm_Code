@@ -11,17 +11,25 @@ function main() {
 
   // handle the event sent with socket.send()
   socket.on("update", update_data);
+  socket.on("error", update_error)
 
   setup_intervals();
   setup_jogs();
-  
+  setup_buttons():
 }
 
 function setup_intervals() {
   window.setInterval(function () {
     socket.emit("get_update");
   }, 100);
+
+  window.setInterval(function () {
+    socket.emit("get_error");
+  }, 1000);
 }
+
+
+
 
 
 function setup_jogs(){
@@ -41,12 +49,28 @@ function set_jog_dir(el){
 }
 }
 
+function setup_buttons() {
+  document.getElementById('setup').onclick = () => socket.emit('setup')
+  document.getElementById('calibrate').onclick = () => socket.emit('calibrate')
+  document.getElementById('fuck').onclick = () => socket.emit('fuck')
+  document.getElementById('home').onclick = () => socket.emit('home')
+}
+
+
 
 function update_data(d) {
   update_plot(d.joint_pos.x, d.joint_pos.y, d.joint_pos.z);
   delete d.joint_pos;
   document.getElementById("status").innerHTML = JSON.stringify(d, null, 2);
 }
+
+function update_error(d) {
+  document.getElementById("error").innerHTML = JSON.stringify(d, null, 2);
+}
+
+
+
+//plot shit
 
 function setup_plot() {
   //setting up plot

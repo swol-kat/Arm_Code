@@ -10,18 +10,46 @@ app.config['SECRET_KEY'] = 'secret!'
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-arm = setup()
+
+
 
 #serves html
 @app.route('/')
 def load_dashboard():
     return render_template('index.html')
 
+@socketio.on('setup')
+def setup():
+    global arm
+    if not arm:
+        arm = setup()
+
+@socketio.on('fuck')
+def fuck():
+    if arm:
+        arm.fuck()
+
+@socketio.on('home')
+def home():
+    if arm:
+        arm.home_arm()
+
+@socketio.on('calibrate')
+def calibrate():
+    if arm:
+        arm.calibrate_arm()
+
+@socketio.on('get_error')
+def get_error():
+    emit('error', arm.get_error())
+
+
 @socketio.on('get_update')
 def update_arm():
-    arm.update()
-    data = arm.export_data()
-    emit('update', data)
+    if arm:
+        arm.update()
+        data = arm.export_data()
+        emit('update', data)
 
 @socketio.on('jog')
 def jog(data):
