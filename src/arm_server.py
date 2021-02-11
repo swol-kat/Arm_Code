@@ -7,7 +7,7 @@ from init_virtual import setup
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 CORS(app)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 arm = setup()
 
@@ -43,4 +43,4 @@ def jog(data):
 
 if __name__ == '__main__':
     print('[INFO] Starting server at http://localhost:6969')
-    socketio.run(app=app, host='0.0.0.0', port=6969, debug=False)
+    socketio.run(app=app, host='0.0.0.0', port=6969, debug=True)
