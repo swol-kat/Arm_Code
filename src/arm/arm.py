@@ -98,7 +98,7 @@ class Arm:
         pe = self.fwkin(thetas).reshape((1,3))
 
         J = np.zeros((6, 1))
-        for i in range(1,4):
+        for i in range(3):
             tf = self.fwkin(thetas, joint=i, vector=False)
             z = tf[0:3, 2]
             pi = tf[0:3, 3]
