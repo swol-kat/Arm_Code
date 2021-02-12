@@ -16,7 +16,17 @@
         },
         "axis0": {
             "name": "2 shoulder",
-            "ratio": 5.0
+            "ratio": -5.0
+        }
+    },
+    "35735093333325": {
+        "axis1": {
+            "name": "2 lower",
+            "ratio": -9.0
+        },
+        "axis0": {
+            "name": "2 upper",
+            "ratio": -9.0
         }
     }
 }

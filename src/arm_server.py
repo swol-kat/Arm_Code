@@ -23,7 +23,7 @@ def load_dashboard():
 def setup_arm():
     global arm
     if arm is None:
-        arm = setup()
+        arm = setup()['right_arm']
 
 
 @socketio.on('fuck')
