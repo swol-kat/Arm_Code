@@ -11,7 +11,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 
-
+arm = None
 
 #serves html
 @app.route('/')
@@ -20,9 +20,9 @@ def load_dashboard():
 
 @socketio.on('setup')
 def setup():
-    global arm
+    print("dsadasd")
     if not arm:
-        arm = setup()
+        arm = setup()['right_arm']
 
 @socketio.on('fuck')
 def fuck():

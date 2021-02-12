@@ -24,7 +24,11 @@ def setup():
 
     arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
-    single_arm = Arm(output_dict['1 lower'], output_dict['1 upper'], output_dict['1 shoulder'], arm_variables)
+    arm_dict = {}
+
+    arm_dict['right_arm'] = Arm(output_dict['1 lower'], output_dict['1 upper'], output_dict['1 shoulder'], arm_variables)
+
+    arm_dict['left_arm'] = Arm(output_dict['2 lower'], output_dict['2 upper'], output_dict['2 shoulder'], arm_variables)
 
     single_arm.calibrate_arm()
     print("homing Odrives")
@@ -33,7 +37,7 @@ def setup():
     single_arm.enable_arm()
     print("Setup Complete!")
 
-    return single_arm
+    return arm_dict
 
 if __name__ == "__main__":
     setup()

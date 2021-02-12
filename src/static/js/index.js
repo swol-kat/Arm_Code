@@ -15,7 +15,7 @@ function main() {
 
   setup_intervals();
   setup_jogs();
-  setup_buttons():
+  setup_buttons();
 }
 
 function setup_intervals() {
