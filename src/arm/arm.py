@@ -93,22 +93,21 @@ class Arm:
         if not thetas:
             thetas = self.thetas
 
-        pe = self.fwkin(thetas)
+        pe = self.fwkin(thetas).reshape((1,3))
 
-        J = np.zeros(6, 1)
-        for i in range(3):
+        J = np.zeros((6, 1))
+        for i in range(1,4):
             tf = self.fwkin(thetas, joint=i, vector=False)
-            z = tf[0:3, i]
+            z = tf[0:3, 2]
             pi = tf[0:3, 3]
-
             Jp = np.cross(z, pe - pi)
             Jo = z
-            Ji = np.concatenate((Jp, Jo), axis=0)
+            Ji = np.concatenate((Jp.reshape((3,1)), Jo.reshape((3,1))), axis=0)
             J = np.concatenate((J, Ji), axis=1)
 
         return np.delete(J, 0, 1)
 
-    def fwkin(self, thetas=None, joint=4, vector=True):
+    def fwkin(self, thetas=None, joint=3, vector=True, disp = False):
         """
         converts joint angles stored in self.thetas to workspace returns:
         [float]  returns a either a 4x4 matrix of the transform from joint 1 to the input joint or a 3x1 vector
@@ -119,11 +118,16 @@ class Arm:
             thetas = self.thetas
 
         t1, t2, t3 = thetas.reshape(3)
+        if disp:
+            dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
+                        [0, self.arm_vars['D2'], 0, 0],
+                        [t2, 0, self.arm_vars['A2'], 0],
+                        [t3-t2, 0, self.arm_vars['A3'], 0]]
 
-        dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
-                    [0, self.arm_vars['D2'], 0, 0],
-                    [t2, 0, self.arm_vars['A2'], 0],
-                    [t3-t2, 0, self.arm_vars['A3'], 0]]
+        else:
+            dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
+                        [t2, self.arm_vars['D2'], self.arm_vars['A2'], 0],
+                        [t3-t2, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
@@ -184,7 +188,7 @@ class Arm:
         ys = [0]
         zs = [0]
         for i in range(4):
-            pos = self.fwkin(joint=i + 1)
+            pos = self.fwkin(joint=i + 1, disp=True)
             x, y, z = pos.reshape(3)
             xs.append(x)
             ys.append(y)
