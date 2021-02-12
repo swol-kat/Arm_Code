@@ -14,7 +14,7 @@ class Joint:
         self.odrive_axis.clear_errors()
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
         t_start = time.time()
-        while self.odrive_axis.current_state != odrive.enums.AXIS_STATE_IDLE and t_start + 10 > time.time():
+        while self.odrive_axis.current_state != odrive.enums.AXIS_STATE_IDLE:
             time.sleep(0.1)
 
     def enable_joint(self):
@@ -76,3 +76,24 @@ class Joint:
             'encoder': hex(self.odrive_axis.encoder.error),
             'controller': hex(self.odrive_axis.controller.error)
         }
+    
+    def motor_configuration(self, encoder_cs_pin):
+        self.odrive_axis.encoder.config.mode = 257
+        self.odrive_axis.encoder.config.cpr = 16384
+        self.odrive_axis.encoder.config.abs_spi_cs_gpio_pin = encoder_cs_pin
+        self.odrive_axis.motor.config.pole_pairs = 20
+        self.odrive_axis.motor.config.torque_constant = 8.27/160
+        self.odrive_axis.motor.config.current_lim = 10.0
+        self.odrive_axis.motor.config.current_lim_margin = 1000
+        self.odrive_axis.motor.config.torque_lim = 10000
+        self.odrive_axis.controller.config.enable_vel_limit = True
+        self.odrive_axis.controller.config.control_mode = 3
+        self.odrive_axis.controller.config.pos_gain = 25.0
+        self.odrive_axis.controller.config.vel_gain = 0.17
+        self.odrive_axis.controller.config.vel_integrator_gain = 0.33
+        self.odrive_axis.controller.config.vel_limit = 3.0
+        self.odrive_axis.controller.config.vel_limit_tolerance = 999999999
+        self.odrive_axis.controller.config.vel_ramp_rate = 2.5
+        self.odrive_axis.controller.config.torque_ramp_rate = 0.01
+        self.odrive_axis.controller.config.inertia = 0.0
+        

@@ -95,14 +95,15 @@ class Arm:
 
         pe = self.fwkin(thetas)
 
-        J = np.zeros(6, 1)
-        for i in range(3):
+        J = np.zeros((6, 1))
+        for i in range(4):
             tf = self.fwkin(thetas, joint=i, vector=False)
             z = tf[0:3, i]
             pi = tf[0:3, 3]
 
             Jp = np.cross(z, pe - pi)
             Jo = z
+            print(Jp, Jo)
             Ji = np.concatenate((Jp, Jo), axis=0)
             J = np.concatenate((J, Ji), axis=1)
 
@@ -218,3 +219,17 @@ class Arm:
             'upper': self.upper_axis.get_error(),
             'lower': self.lower_axis.get_error()
         }
+    
+    def get_tip_force(self):
+        jacob = self.jacobian()
+        print(jacob)
+        
+        joint_torques = np.zeros(4)
+        joint_torques[0] = self.shoulder_axis.get_torque()
+        joint_torques[2] = self.upper_axis.get_torque()
+        joint_torques[3] = self.lower_axis.get_torque()
+
+        tip_force = np.transpose(jacob) @ joint_torques
+
+        return tip_force
+

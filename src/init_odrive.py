@@ -9,13 +9,13 @@ import numpy as np
 
 def setup():
     print("finding Odrives")
-    odrives = odrive.find_any(find_multiple=2)
+    odrives = odrive.find_any(find_multiple=3)
+
+    print("found Odrives")
 
     # Multiple Odrive setup:
-    # Serial number for arm 1 lower and upper: 35593308029517
-    # Serial number for arm 1 shoulder: 35623373914701
     axis_dict = json.loads(open('axis_config.json', "r").read())
-
+    
     output_dict = {}
     for od in odrives:
         c = axis_dict[str(od.serial_number)]
@@ -30,15 +30,34 @@ def setup():
 
     arm_dict['left_arm'] = Arm(output_dict['2 lower'], output_dict['2 upper'], output_dict['2 shoulder'], arm_variables)
 
-    single_arm.calibrate_arm()
-    print("homing Odrives")
-    single_arm.home_arm()
-    print("enabling Odrives")
-    single_arm.enable_arm()
+    for name, arm in arm_dict.items():
+        print(f"calibrating {name}")
+        arm.calibrate_arm()
+        print(f"homing {name}")
+        arm.home_arm()
+        print(f"enabling {name}")
+        arm.enable_arm()
+    
     print("Setup Complete!")
 
     return arm_dict
 
+def print_errors(arms):
+    for name, arm in arms.items():
+        if(arm.shoulder_axis.odrive_axis.error):
+            print(f'error on {name} shoulder axis: {hex(arm.shoulder_axis.odrive_axis.error)}')
+        if(arm.upper_axis.odrive_axis.error):
+            print(f'error on {name} upper axis: {hex(arm.upper_axis.odrive_axis.error)}')
+        if(arm.lower_axis.odrive_axis.error):
+            print(f'error on {name} lower axis: {hex(arm.lower_axis.odrive_axis.error)}')
+
+def config_params(arms):
+    for name, arm in arms.items():
+        arm.shoulder_axis.motor_configuration()
+        arm.lower_axis.motor_configuration()
+        arm.upper_axis.motor_configuration()
+    #how save?
+
 
 if __name__ == '__main__':
-    setup()
+    arms = setup()
