@@ -17,8 +17,10 @@ class Arm:
         self.target_pos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
         self.pos = np.array([[0.], [0.], [0.]])
-        self.vel = np.array([[0], [0], [0]])
-        self.torque = np.array([[0], [0], [0]])
+        self.joint_vel = np.array([[0], [0], [0]])
+        self.joint_torque = np.array([[0], [0], [0]])
+        self.vel = np.zeros((3,1))
+        self.force = np.zeros((3,1))
 
         self.plot=False
         if plot:
@@ -151,10 +153,13 @@ class Arm:
 
         self.pos = self.fwkin()
 
-        self.vel = np.array([[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
+        self.joint_vel = np.array([[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
 
-        self.torque = np.array(
-            [[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
+        self.joint_torque = np.array([[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
+
+        self.vel = self.get_tip_vel()
+
+        self.force= self.get_tip_force()
 
         if self.plot:
             self.plot.plot(self)
@@ -212,8 +217,10 @@ class Arm:
             'joint_pos': self.get_joint_pos(),
             'thetas': self.thetas.reshape(3).tolist(),
             'pos': self.pos.reshape(3).tolist(),
+            'joint_vel': self.joint_vel.reshape(3).tolist(),
+            'joint_torque': self.joint_torque.reshape(3).tolist(),
             'vel': self.vel.reshape(3).tolist(),
-            'torque': self.torque.reshape(3).tolist(),
+            'force': self.force.reshape(3).tolist(),
         }
 
     def get_error(self):
@@ -222,17 +229,19 @@ class Arm:
             'upper': self.upper_axis.get_error(),
             'lower': self.lower_axis.get_error()
         }
-    
+
+    def get_tip_vel(self):
+        jacob = self.jacobian()[0:3,:]
+
+        tip_vel = np.transpose(jacob) @ self.joint_vel
+
+        return tip_vel.reshape((3,1))
+
     def get_tip_force(self):
-        jacob = self.jacobian()
+        jacob = self.jacobian()[0:3,:]
         print(jacob)
-        
-        joint_torques = np.zeros(4)
-        joint_torques[0] = self.shoulder_axis.get_torque()
-        joint_torques[2] = self.upper_axis.get_torque()
-        joint_torques[3] = self.lower_axis.get_torque()
 
-        tip_force = np.transpose(jacob) @ joint_torques
+        tip_force = np.transpose(jacob) @ self.joint_torque
 
-        return tip_force
+        return tip_force.reshape((3,1))
 
