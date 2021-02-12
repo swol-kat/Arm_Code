@@ -14,3 +14,6 @@ def setup():
     single_arm.enable_arm()
 
     return single_arm
+
+if __name__ == "__main__":
+    arm = setup()
