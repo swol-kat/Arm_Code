@@ -14,6 +14,3 @@ def setup():
     single_arm.enable_arm()
 
     return single_arm
-
-
-print("Setup Complete!")

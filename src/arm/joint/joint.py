@@ -3,6 +3,7 @@ import odrive.enums
 import math
 import time
 
+
 class Joint:
     def __init__(self, odrive_axis, gear_ratio):
         self.odrive_axis = odrive_axis

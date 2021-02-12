@@ -11,7 +11,7 @@ function main() {
 
   // handle the event sent with socket.send()
   socket.on("update", update_data);
-  socket.on("error", update_error)
+  socket.on("error", update_error);
 
   setup_intervals();
   setup_jogs();
@@ -28,35 +28,31 @@ function setup_intervals() {
   }, 1000);
 }
 
-
-
-
-
-function setup_jogs(){
-  document.getElementById('jog_container').childNodes.forEach(set_jog_dir)
+function setup_jogs() {
+  document.getElementById("jog_container").childNodes.forEach(set_jog_dir);
 }
 
-function set_jog_dir(el){
-  if (el.tagName == 'DIV' && el.dataset.axis != null) {
-  el.childNodes[1].onclick = () => socket.emit('jog', {
-    amount: document.getElementById('jog_amount').value,
-    axis: el.dataset.axis
-  })
-  el.childNodes[3].onclick = () => socket.emit('jog', {
-    amount: - document.getElementById('jog_amount').value,
-    axis: el.dataset.axis
-  })
-}
+function set_jog_dir(el) {
+  if (el.tagName == "DIV" && el.dataset.axis != null) {
+    el.childNodes[1].onclick = () =>
+      socket.emit("jog", {
+        amount: document.getElementById("jog_amount").value,
+        axis: el.dataset.axis,
+      });
+    el.childNodes[3].onclick = () =>
+      socket.emit("jog", {
+        amount: -document.getElementById("jog_amount").value,
+        axis: el.dataset.axis,
+      });
+  }
 }
 
 function setup_buttons() {
-  document.getElementById('setup').onclick = () => socket.emit('setup')
-  document.getElementById('calibrate').onclick = () => socket.emit('calibrate')
-  document.getElementById('fuck').onclick = () => socket.emit('fuck')
-  document.getElementById('home').onclick = () => socket.emit('home')
+  document.getElementById("setup").onclick = () => socket.emit("setup");
+  document.getElementById("calibrate").onclick = () => socket.emit("calibrate");
+  document.getElementById("fuck").onclick = () => socket.emit("fuck");
+  document.getElementById("home").onclick = () => socket.emit("home");
 }
-
-
 
 function update_data(d) {
   update_plot(d.joint_pos.x, d.joint_pos.y, d.joint_pos.z);
@@ -67,8 +63,6 @@ function update_data(d) {
 function update_error(d) {
   document.getElementById("error").innerHTML = JSON.stringify(d, null, 2);
 }
-
-
 
 //plot shit
 
