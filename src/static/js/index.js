@@ -52,6 +52,8 @@ function setup_buttons() {
   document.getElementById("calibrate").onclick = () => socket.emit("calibrate");
   document.getElementById("fuck").onclick = () => socket.emit("fuck");
   document.getElementById("home").onclick = () => socket.emit("home");
+  document.getElementById("enable").onclick = () => socket.emit("enable");
+}
 }
 
 function update_data(d) {

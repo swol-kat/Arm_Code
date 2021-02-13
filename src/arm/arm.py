@@ -239,7 +239,6 @@ class Arm:
 
     def get_tip_force(self):
         jacob = self.jacobian()[0:3,:]
-        print(jacob)
 
         tip_force = np.transpose(jacob) @ self.joint_torque
 
