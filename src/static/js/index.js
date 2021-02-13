@@ -54,7 +54,7 @@ function setup_buttons() {
   document.getElementById("home").onclick = () => socket.emit("home");
   document.getElementById("enable").onclick = () => socket.emit("enable");
 }
-}
+
 
 function update_data(d) {
   update_plot(d.joint_pos.x, d.joint_pos.y, d.joint_pos.z);
