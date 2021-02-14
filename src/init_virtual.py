@@ -1,5 +1,5 @@
-from arm import Arm
-from arm.joint import VirtualJoint
+from src.robot.arm import Arm
+from src.robot.arm.joint import VirtualJoint
 
 
 def setup():

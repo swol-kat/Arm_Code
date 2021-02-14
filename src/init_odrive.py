@@ -1,10 +1,9 @@
 import odrive
 import odrive.enums
 
-from arm.joint import Joint
-from arm import Arm
+from src.robot.arm.joint import Joint
+from src.robot.arm import Arm
 import json
-import numpy as np
 
 
 def setup():
