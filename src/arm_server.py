@@ -21,6 +21,7 @@ def load_dashboard():
 
 @socketio.on('setup')
 def setup_arm():
+    print('running setup')
     global arm
     arm_dict = setup()
     arm = arm_dict['right_arm']
@@ -28,24 +29,28 @@ def setup_arm():
 
 @socketio.on('fuck')
 def fuck():
+    print('running fuck')
     if arm:
         arm.fuck()
 
 
 @socketio.on('enable')
 def enable():
+    print('running enable')
     if arm:
         arm.enable_arm()
 
 
 @socketio.on('home')
 def home():
+    print('running home')
     if arm:
         arm.home_arm()
 
 
 @socketio.on('calibrate')
 def calibrate():
+    print('running calibrate')
     if arm:
         arm.calibrate_arm()
 

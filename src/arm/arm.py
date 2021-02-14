@@ -174,9 +174,15 @@ class Arm:
 
     def calibrate_arm(self):
         print("calibrating arm")
-        self.shoulder_axis.calibrate_joint()
-        self.upper_axis.calibrate_joint()
-        self.lower_axis.calibrate_joint()
+        self.shoulder_axis.start_calibration()
+        self.upper_axis.start_calibration()
+        self.lower_axis.start_calibration()
+        end = False
+        while not end:
+            end = True
+            end = end and self.shoulder_axis.is_calibration_complete()
+            end = end and self.upper_axis.is_calibration_complete()
+            end = end and self.lower_axis.is_calibration_complete()
 
     def enable_arm(self):
         print("enabling arm")

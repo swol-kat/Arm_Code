@@ -68,7 +68,7 @@ class Joint:
         """
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_IDLE
         self.odrive_axis.encoder.set_linear_count(0)
-        time.sleep(1)
+        #time.sleep(1)
 
     def get_error(self):
         return {
@@ -97,3 +97,9 @@ class Joint:
         self.odrive_axis.controller.config.torque_ramp_rate = 0.01
         self.odrive_axis.controller.config.inertia = 0.0
         
+    def start_calibration(self):
+        self.odrive_axis.clear_errors()
+        self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+
+    def is_calibration_complete(self):
+        return self.odrive_axis.current_state == odrive.enums.AXIS_STATE_IDLE
