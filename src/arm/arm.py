@@ -173,16 +173,19 @@ class Arm:
         self.lower_axis.run_manual_homing_routine()
 
     def calibrate_arm(self):
+        print("calibrating arm")
         self.shoulder_axis.calibrate_joint()
         self.upper_axis.calibrate_joint()
         self.lower_axis.calibrate_joint()
 
     def enable_arm(self):
+        print("enabling arm")
         self.shoulder_axis.enable_joint()
         self.upper_axis.enable_joint()
         self.lower_axis.enable_joint()
 
     def fuck(self):
+        print("fucking arm")
         self.shoulder_axis.fuck()
         self.upper_axis.fuck()
         self.lower_axis.fuck()
