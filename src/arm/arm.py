@@ -222,8 +222,15 @@ class Arm:
             self.go_to_raw(self.pos+pos,False)
 
     def export_data(self):
+        joint_pos = self.get_joint_pos()
+        forces = self.force.reshape(3)
+        f_hat = 2 * forces/np.linalg.norm(forces)
+        joint_pos['x'].append(f_hat[0])
+        joint_pos['y'].append(f_hat[1])
+        joint_pos['z'].append(f_hat[2])
+
         return {
-            'joint_pos': self.get_joint_pos(),
+            'joint_pos': joint_pos,
             'thetas': self.thetas.reshape(3).tolist(),
             'pos': self.pos.reshape(3).tolist(),
             'joint_vel': self.joint_vel.reshape(3).tolist(),
