@@ -29,8 +29,6 @@ class Plot:
             ys.append(y)
             zs.append(z)
 
-        force = arm.get_tip_force()
-
 
 
         self.config_plt()
