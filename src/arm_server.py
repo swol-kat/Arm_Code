@@ -31,6 +31,7 @@ def fuck():
     if arm:
         arm.fuck()
 
+
 @socketio.on('enable')
 def enable():
     if arm:
