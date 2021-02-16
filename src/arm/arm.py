@@ -5,7 +5,7 @@ import time
 from .util.kinematics import htm
 from .util import quintic
 from .util import Plot
-from copy import copy
+from copy import copy, deepcopy
 
 class Arm:
     def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
@@ -19,6 +19,7 @@ class Arm:
         self.pos = np.array([[0.], [0.], [0.]])
         self.joint_vel = np.array([[0], [0], [0]])
         self.joint_torque = np.array([[0], [0], [0]])
+        self.tip_force_limit = np.array([[3],[3],[3]])
         self.vel = np.zeros((3,1))
         self.force = np.zeros((3,1))
 
@@ -164,6 +165,16 @@ class Arm:
         if self.plot:
             self.plot.plot(self)
 
+        # do tip forces
+        """
+        curr_force = self.get_tip_force()
+        delta = self.tip_force_limit - np.abs(curr_force)
+        torque_delta = np.transpose(self.jacobian()[0:3,:]) @ delta
+        self.shoulder_axis.set_torque(np.abs(self.shoulder_axis.get_torque()) + torque_delta[0])
+        self.upper_axis.set_torque(np.abs(self.upper_axis.get_torque()) + torque_delta[1])
+        self.lower_axis.set_torque(np.abs(self.lower_axis.get_torque()) + torque_delta[2])
+        """
+
     def home_arm(self):
         print("homing shoudler")
         self.shoulder_axis.run_manual_homing_routine()
@@ -223,11 +234,13 @@ class Arm:
 
     def export_data(self):
         joint_pos = self.get_joint_pos()
-        forces = self.force.reshape(3)
-        f_hat = 2 * forces/np.linalg.norm(forces)
-        joint_pos['x'].append(f_hat[0])
-        joint_pos['y'].append(f_hat[1])
-        joint_pos['z'].append(f_hat[2])
+        forces = deepcopy(self.vel.reshape(3))
+        joint_pos['x'].append(forces[0] + joint_pos['x'][-1])
+        joint_pos['y'].append(forces[1] + joint_pos['y'][-1])
+        joint_pos['z'].append(forces[2] + joint_pos['z'][-1])
+
+        print(self.jacobian())
+        print('-----------------------------------')
 
         return {
             'joint_pos': joint_pos,
@@ -249,14 +262,16 @@ class Arm:
     def get_tip_vel(self):
         jacob = self.jacobian()[0:3,:]
 
-        tip_vel = np.transpose(jacob) @ self.joint_vel
+        tip_vel = jacob @ self.joint_vel
 
         return tip_vel.reshape((3,1))
 
     def get_tip_force(self):
         jacob = self.jacobian()[0:3,:]
 
-        tip_force = np.transpose(jacob) @ self.joint_torque
+        tip_force = jacob @ self.joint_torque
 
-        return tip_force.reshape((3,1))
+        return tip_force.reshape((3,1))/100
 
+    def set_tip_force_limit(self, x, y, z):
+        self.tip_force_limit = np.array([[x],[y],[z]])
