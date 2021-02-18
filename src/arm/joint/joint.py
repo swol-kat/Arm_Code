@@ -25,7 +25,10 @@ class Joint:
         self.odrive_axis.controller.input_pos = angle * self.gear_ratio / 2 / math.pi
 
     def set_torque(self, torque):  # set torque in in*lb
-        self.odrive_axis.motor.config.current_lim = torque / self.torque_constant / 8.8507 / self.gear_ratio
+        def threshold(value, minimum, maximum):
+            return min(maximum, max(value, minimum))
+        current = threshold(abs(torque / self.torque_constant / 8.8507 / self.gear_ratio), 0, 20) #TODO: make this bigger for more max torque
+        self.odrive_axis.motor.config.current_lim = current
 
     def fuck(self):
         self.odrive_axis.requested_state = odrive.enums.AXIS_STATE_IDLE

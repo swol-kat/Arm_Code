@@ -7,6 +7,8 @@ from .util import quintic
 from .util import Plot
 from copy import copy, deepcopy
 
+from threading import Lock
+
 class Arm:
     def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
         self.lower_axis = lower_axis
@@ -22,6 +24,19 @@ class Arm:
         self.tip_force_limit = np.array([[3],[3],[3]])
         self.vel = np.zeros((3,1))
         self.force = np.zeros((3,1))
+        self.last_update_time = time.time_ns()
+        self.control_mode = 'position'
+        '''
+        Control modes:
+            position - arm freely moves to any position with tip force limiting
+            contact - arm moves in given direction until component of force parallel to direction meets setpoint. tip force limits still apply
+        '''
+        self.contact_force = 3.0
+        self.contact_vector = np.array([[0], [0], [-1]])
+        self.contact_kp = 1.0
+
+
+        self.arm_lock = Lock()
 
         self.plot=False
         if plot:
@@ -59,6 +74,11 @@ class Arm:
 
     def send_to_pos(self, thetas):
         t1, t2, t3 = thetas.reshape(3)
+        #check if elbow over travel. don't let joint go too far
+        if t3-t2 > math.pi * 0.75 :
+            t3 = t2 + math.pi * 0.75
+        if t3-t2 < math.pi * -0.5 :
+            t3 = t2 - math.pi * 0.5
         self.shoulder_axis.set_setpoint(t1)
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
@@ -87,10 +107,8 @@ class Arm:
 
         print('reached')
 
-    def set_current_limits(self, min_force, max_force):
-        # know the jacobian and maths
-        # F_tip = T * J(q)
-        pass
+    def set_tip_force_limit(self, x, y, z):
+        self.tip_force_limit = np.array([[x],[y],[z]])
 
     def jacobian(self, thetas=None):
         if not thetas:
@@ -144,8 +162,15 @@ class Arm:
         return t_final
 
     def update(self):
+        
+        if self.control_mode == 'contact':
+            #do contact control loop
+            parallel_force = curr_force * self.contact_vector
+            error = parallel_force - self.contact_force
+            new_position = self.pos + error * self.contact_vector
+            self.go_to_raw(new_position)
+            
         # gets angle from each of the three joints
-
         t1 = self.shoulder_axis.get_pos()
         t2 = self.upper_axis.get_pos()
         t3 = self.lower_axis.get_pos()
@@ -166,14 +191,17 @@ class Arm:
             self.plot.plot(self)
 
         # do tip forces
-        """
         curr_force = self.get_tip_force()
         delta = self.tip_force_limit - np.abs(curr_force)
         torque_delta = np.transpose(self.jacobian()[0:3,:]) @ delta
         self.shoulder_axis.set_torque(np.abs(self.shoulder_axis.get_torque()) + torque_delta[0])
         self.upper_axis.set_torque(np.abs(self.upper_axis.get_torque()) + torque_delta[1])
         self.lower_axis.set_torque(np.abs(self.lower_axis.get_torque()) + torque_delta[2])
-        """
+
+        self.last_update_time = time.time_ns()
+
+
+        
 
     def home_arm(self):
         print("homing shoudler")
@@ -234,13 +262,10 @@ class Arm:
 
     def export_data(self):
         joint_pos = self.get_joint_pos()
-        forces = deepcopy(self.vel.reshape(3))
+        forces = deepcopy(self.force.reshape(3))
         joint_pos['x'].append(forces[0] + joint_pos['x'][-1])
         joint_pos['y'].append(forces[1] + joint_pos['y'][-1])
         joint_pos['z'].append(forces[2] + joint_pos['z'][-1])
-
-        print(self.jacobian())
-        print('-----------------------------------')
 
         return {
             'joint_pos': joint_pos,
@@ -269,9 +294,9 @@ class Arm:
     def get_tip_force(self):
         jacob = self.jacobian()[0:3,:]
 
-        tip_force = jacob @ self.joint_torque
+        tip_force = np.linalg.pinv(np.transpose(jacob)) @ self.joint_torque
 
-        return tip_force.reshape((3,1))/100
+        return tip_force.reshape((3,1))
 
-    def set_tip_force_limit(self, x, y, z):
-        self.tip_force_limit = np.array([[x],[y],[z]])
+    def set_contact_vector(self, vector):
+        self.contact_vector = vector / np.linalg.norm(vector) #make sure contact_vector is a unit vector for direction
