@@ -56,3 +56,9 @@ class VirtualJoint:
         return {
             'axis': 'haha axis go brr'
         }
+
+    def start_calibration(self):
+        pass
+
+    def is_calibration_complete(self):
+        return True
