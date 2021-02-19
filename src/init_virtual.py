@@ -18,4 +18,4 @@ def setup():
     }
 
 if __name__ == "__main__":
-    arm = setup()
+    arm = setup()z
