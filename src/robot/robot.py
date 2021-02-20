@@ -1,11 +1,65 @@
-import numpy as np
-from .arm import Arm
+import json
+
+from arm import Arm
+from arm.joint.virtual_joint import VirtualJoint
+from gaits import Gait, Wiggle
+from src.util import Plot
+from src.util import BodyState
 
 
 class Robot:
+    config: dict
+    gait: Gait
+    arms: list
+    base_state: BodyState
+    target_base_state: BodyState
+    target_base_state: BodyState
+
     def __init__(self):
-        pass
+        self.reload_config()
+        self.plot = Plot()
+
+    def boot(self):
+        """
+        boot up routine for robot
+        :return:
+        """
+        self.arms = [
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'])
+        ]
+
+        for arm in self.arms:
+            arm.calibrate_arm()
+            arm.home_arm()
+            arm.home_arm()
+
+        self.base_state = BodyState(z=13)
+        self.target_base_state = BodyState(z=13)
+
+        self.gait = Wiggle()
+
+    def loop(self):
+        """
+        main control loop of robot run this in a while loop or something
+        :return:
+        """
+        for arm in self.arms:
+            arm.loop()
+            arm.update()
+        self.plot.plot(self)
+        if self.gait:
+            self.gait.loop(self)
+
+    def reload_config(self):
+        """
+        reloads the robot_config file
+        :return:
+        """
+        self.config = json.load(open('robot_config.json'))
 
 
-
-
+if __name__ == "__main__":
+    robot = Robot()

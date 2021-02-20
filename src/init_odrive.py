@@ -13,7 +13,7 @@ def setup():
     print("found Odrives")
 
     # Multiple Odrive setup:
-    axis_dict = json.loads(open('axis_config.json', "r").read())
+    axis_dict = json.loads(open('robot/axis_config.json', "r").read())
     
     output_dict = {}
     for od in odrives:

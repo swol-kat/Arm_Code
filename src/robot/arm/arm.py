@@ -7,6 +7,7 @@ from .util import quintic
 from .util import Plot
 from copy import copy
 
+
 class Arm:
     def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
         self.lower_axis = lower_axis
@@ -19,13 +20,13 @@ class Arm:
         self.pos = np.array([[0.], [0.], [0.]])
         self.joint_vel = np.array([[0], [0], [0]])
         self.joint_torque = np.array([[0], [0], [0]])
-        self.vel = np.zeros((3,1))
-        self.force = np.zeros((3,1))
+        self.vel = np.zeros((3, 1))
+        self.force = np.zeros((3, 1))
+        self.contact = True
 
-        self.plot=False
+        self.plot = False
         if plot:
             self.plot = Plot()
-
 
         self.update()
 
@@ -62,12 +63,12 @@ class Arm:
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
 
-    def go_to_raw(self, target_pos, dog = True):
+    def go_to_raw(self, target_pos, dog=True):
         thetas = self.ikin(target_pos, dog)
         self.send_to_pos(thetas)
         self.update()
 
-    def go_to(self, target_pos, movement_time=.5, dog =True):
+    def go_to(self, target_pos, movement_time=.5, dog=True):
         start_time = time.time()
         elapsed_time = time.time() - start_time
         start_pos = copy(self.pos)
@@ -95,7 +96,7 @@ class Arm:
         if not thetas:
             thetas = self.thetas
 
-        pe = self.fwkin(thetas).reshape((1,3))
+        pe = self.fwkin(thetas).reshape((1, 3))
 
         J = np.zeros((6, 1))
         for i in range(3):
@@ -104,12 +105,12 @@ class Arm:
             pi = tf[0:3, 3]
             Jp = np.cross(z, pe - pi)
             Jo = z
-            Ji = np.concatenate((Jp.reshape((3,1)), Jo.reshape((3,1))), axis=0)
+            Ji = np.concatenate((Jp.reshape((3, 1)), Jo.reshape((3, 1))), axis=0)
             J = np.concatenate((J, Ji), axis=1)
 
         return np.delete(J, 0, 1)
 
-    def fwkin(self, thetas=None, joint=3, vector=True, disp = False):
+    def fwkin(self, thetas=None, joint=3, vector=True, disp=False):
         """
         converts joint angles stored in self.thetas to workspace returns:
         [float]  returns a either a 4x4 matrix of the transform from joint 1 to the input joint or a 3x1 vector
@@ -124,12 +125,12 @@ class Arm:
             dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
                         [0, self.arm_vars['D2'], 0, 0],
                         [t2, 0, self.arm_vars['A2'], 0],
-                        [t3-t2, 0, self.arm_vars['A3'], 0]]
+                        [t3 - t2, 0, self.arm_vars['A3'], 0]]
 
         else:
             dh_table = [[t1, self.arm_vars['D1'], 0, - math.pi / 2],
                         [t2, self.arm_vars['D2'], self.arm_vars['A2'], 0],
-                        [t3-t2, 0, self.arm_vars['A3'], 0]]
+                        [t3 - t2, 0, self.arm_vars['A3'], 0]]
         # identity matrix
         t_final = np.identity(4)
         # calculate fwkin
@@ -153,13 +154,15 @@ class Arm:
 
         self.pos = self.fwkin()
 
-        self.joint_vel = np.array([[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
+        self.joint_vel = np.array(
+            [[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
 
-        self.joint_torque = np.array([[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
+        self.joint_torque = np.array(
+            [[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
 
         self.vel = self.get_tip_vel()
 
-        self.force= self.get_tip_force()
+        self.force = self.get_tip_force()
 
         if self.plot:
             self.plot.plot(self)
@@ -187,7 +190,6 @@ class Arm:
         self.upper_axis.fuck()
         self.lower_axis.fuck()
 
-
     def get_joint_pos(self):
         xs = [0]
         ys = [0]
@@ -204,13 +206,13 @@ class Arm:
             'z': zs
         }
 
-    def jog(self,thetas,pos):
+    def jog(self, thetas, pos):
         if thetas and np.sum(thetas) != 0:
-            thetas = np.array(thetas).reshape((3,1))
+            thetas = np.array(thetas).reshape((3, 1))
             self.send_to_pos(self.thetas + thetas)
         if pos and np.sum(pos) != 0:
             pos = np.array(pos).reshape((3, 1))
-            self.go_to_raw(self.pos+pos,False)
+            self.go_to_raw(self.pos + pos, False)
 
     def export_data(self):
         return {
@@ -231,16 +233,18 @@ class Arm:
         }
 
     def get_tip_vel(self):
-        jacob = self.jacobian()[0:3,:]
+        jacob = self.jacobian()[0:3, :]
 
         tip_vel = np.transpose(jacob) @ self.joint_vel
 
-        return tip_vel.reshape((3,1))
+        return tip_vel.reshape((3, 1))
 
     def get_tip_force(self):
-        jacob = self.jacobian()[0:3,:]
+        jacob = self.jacobian()[0:3, :]
 
         tip_force = np.transpose(jacob) @ self.joint_torque
 
-        return tip_force.reshape((3,1))
+        return tip_force.reshape((3, 1))
 
+    def loop(self):
+        self.go_to_raw(self.target_pos)

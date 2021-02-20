@@ -12,6 +12,7 @@ flask-socketio = "*"
 flask-cors = "*"
 eventlet = "*"
 flask = "*"
+setuptools = "*"
 
 [dev-packages]
 jupyter = "*"
