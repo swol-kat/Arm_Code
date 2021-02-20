@@ -93,14 +93,14 @@ class Joint:
         self.odrive_axis.motor.config.current_lim_margin = 1000
         self.odrive_axis.motor.config.torque_lim = 10000
         self.odrive_axis.controller.config.enable_vel_limit = True
-        self.odrive_axis.controller.config.control_mode = 3
-        self.odrive_axis.controller.config.pos_gain = 25.0
+        self.odrive_axis.controller.config.control_mode = 1
+        self.odrive_axis.controller.config.pos_gain = 50.0
         self.odrive_axis.controller.config.vel_gain = 0.17
         self.odrive_axis.controller.config.vel_integrator_gain = 0.33
-        self.odrive_axis.controller.config.vel_limit = 3.0
+        self.odrive_axis.controller.config.vel_limit = 1000000
         self.odrive_axis.controller.config.vel_limit_tolerance = 999999999
-        self.odrive_axis.controller.config.vel_ramp_rate = 2.5
-        self.odrive_axis.controller.config.torque_ramp_rate = 0.01
+        self.odrive_axis.controller.config.vel_ramp_rate = 1000000
+        self.odrive_axis.controller.config.torque_ramp_rate = 1000000
         self.odrive_axis.controller.config.inertia = 0.0
         
     def start_calibration(self):
