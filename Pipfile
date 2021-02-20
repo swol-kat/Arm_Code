@@ -13,6 +13,7 @@ flask-cors = "*"
 eventlet = "*"
 flask = "*"
 setuptools = "*"
+util = {editable = true, path = "./src/util"}
 
 [dev-packages]
 jupyter = "*"

@@ -13,7 +13,6 @@ class Robot:
     arms: list
     base_state: BodyState
     target_base_state: BodyState
-    target_base_state: BodyState
 
     def __init__(self):
         self.reload_config()
@@ -47,11 +46,12 @@ class Robot:
         :return:
         """
         for arm in self.arms:
-            arm.loop()
             arm.update()
         self.plot.plot(self)
         if self.gait:
             self.gait.loop(self)
+        for arm in self.arms:
+            arm.loop()
 
     def reload_config(self):
         """

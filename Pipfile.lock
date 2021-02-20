@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "eee03398e6a378a9a8df970646f36c82b99c11ea3a5d34d074beb99a8399d9d9"
+            "sha256": "97361275900ff7fa8053fcf84b0c88994e086aadf51521a1916fe1ed50076c77"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -604,6 +604,10 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
             "version": "==1.26.3"
+        },
+        "util": {
+            "editable": true,
+            "path": "./src/util"
         },
         "wcwidth": {
             "hashes": [
