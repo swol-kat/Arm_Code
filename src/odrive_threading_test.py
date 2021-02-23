@@ -6,6 +6,7 @@ from multiprocessing import Process, Pipe
 from copy import deepcopy
 from collections import namedtuple
 import json
+import matplotlib as plot
 
 axis_data = namedtuple('axis_data', ['pos_now', 'vel_now', 'curr_now'])
 axis_command = namedtuple('axis_command', ['pos', 'curr_lim'])
@@ -37,10 +38,11 @@ def odrive_worker(serial, conn):
         conn.send(data)
 
 
-
 axis_dict = json.loads(open('axis_config.json', "r").read())
 
 serials = list(axis_dict.keys())
+
+#odrive_list = odrive.find_any(find_multiple = len(serials))
 
 odrive_pipes = []
 process_list = []
@@ -62,18 +64,25 @@ num_loops = 0
 start_time = time.time()
 run_time = 5
 
+
 print('starting test')
 
 fake_data = axis_command(0, 0)
 fake_odrive_packet = odrive_command(deepcopy(fake_data),deepcopy(fake_data))
 
+loop_times = []
+last_time = start_time + run_time - time.time()
+
 while start_time + run_time > time.time():
     
     for drive in odrive_pipes:
         drive.to_main.send(deepcopy(fake_odrive_packet))
+    # do joint calculations here and form packets
+    
     for drive in odrive_pipes:
         data = drive.to_main.recv()
     num_loops += 1
+    loop_times.append(start_time + run_time - time.time())
 
 print(f'Loop Frequency: {num_loops / run_time}')
 
