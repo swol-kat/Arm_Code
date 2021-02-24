@@ -5,8 +5,7 @@ import time
 
 
 class Threaded_Joint:
-    def __init__(self, odrive_pipe, axis_num, gear_ratio, torque_constant):
-        self.odrive_pipe = odrive_pipe
+    def __init__(self, gear_ratio, torque_constant):
         self.gear_ratio = gear_ratio
         self.torque_constant = odrive_axis.motor.config.torque_constant
         self.state = 'halt'
@@ -42,8 +41,9 @@ class Threaded_Joint:
     def set_setpoint(self, position):
         self.pos_command = position
 
-    def send_command(self, command_dict):
+    def get_command(self):
         #this is called every loop to send data to motor worker. form packet in command_dict
+        command_dict = {}
         if self.state == 'halt':
             def set_state_to_halt(axis, output_dict):
                 axis.requested_state = odrive.enums.AXIS_STATE_IDLE
@@ -51,7 +51,6 @@ class Threaded_Joint:
             command_dict['command'] = set_state_to_halt
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
-            return
 
         if self.state == 'start_calibrate':
             def start_calibrate_joint(axis, output_dict):
@@ -63,7 +62,6 @@ class Threaded_Joint:
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
             self.state = 'wait_calibrate'
-            return
 
         if self.state == 'wait_calibrate':
             def check_curr_state(axis, output_dict):
@@ -72,12 +70,10 @@ class Threaded_Joint:
             command_dict['command'] = check_curr_state
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
-            return
 
         if self.state == 'run':
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-            return
         
         if self.state == 'enable':
             def enable_axis(axis, output_dict):
@@ -88,7 +84,6 @@ class Threaded_Joint:
             command_dict['command'] = enable_axis
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-            return
 
         if self.state == 'disable':
             def disable_axis(axis, output_dict):
@@ -98,7 +93,6 @@ class Threaded_Joint:
             command_dict['command'] = disable_axis
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-            return
         
         if self.state == 'configure':
             def configure_axis(axis, output_dict):
@@ -138,6 +132,7 @@ class Threaded_Joint:
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
 
+        return command_dict
 
     def recieve_data(self, data_dict):
         #called when valid data comes back. index checked so guaranteed most recent
@@ -191,6 +186,9 @@ class Threaded_Joint:
         #only calibrate if in correct state to
         if self.state == 'halt' or self.state == 'run':
             self.state = 'calibrate'
+
+    def configure(self):
+        self.state = 'configure'
 
     def get_curr_state(self):
         return self.state

@@ -8,12 +8,7 @@ from collections import namedtuple
 import json
 import matplotlib as plot
 from gui.gui import gui_worker
-
-axis_data = namedtuple('axis_data', ['pos_now', 'vel_now', 'curr_now'])
-axis_command = namedtuple('axis_command', ['pos', 'curr_lim'])
-
-odrive_command = namedtuple('odrive_command', ['axis_0_command', 'axis_1_command'])
-odrive_data = namedtuple('odrive_data', ['axis_0_data', 'axis_1_data'])
+from arm.joint import Odrive_Controller, Threaded_Joint
 
 odrive_pipe = namedtuple('odrive_pipe', ['to_worker', 'to_main', 'axis_0_name', 'axis_1_name'])
 
@@ -57,19 +52,24 @@ axis_dict = json.loads(open('axis_config.json', "r").read())
 
 serials = list(axis_dict.keys())
 
-odrive_pipes = []
 process_list = []
+odrive_controllers = []
+joint_dict = {}
 
 print('starting processes')
 
 for serial in serials:
     to_worker, to_main = Pipe()
-    odrive_pipes.append(odrive_pipe(to_worker, to_main, axis_dict[serial]['axis0']['name'], axis_dict[serial]['axis1']['name']))
+    joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
+    joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
+    odrive_controllers.append(Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
     process_list.append(Process(target=odrive_worker, args=(serial, odrive_pipes[-1].to_worker, )))
     process_list[-1].start()
-    good = odrive_pipes[-1].to_main.recv()
+    good = to_main.recv() #just wait for thread to find odrive
 
-#make arm object
+#make arm objects
+
+
 
 #start gui worker - needs arm object
 process_list.append(Process(target=gui_worker, args=(None, )))
