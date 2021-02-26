@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .kinematics import euler_tm
-from .robot_util import get_body_pts
+from .robot_util import get_body_pts, get_rot_leg_orig
 
 
 class Plot:
@@ -51,13 +51,9 @@ class Plot:
         plot_points = np.array(plot_points)
         self.ax.plot(plot_points[:, 0], plot_points[:, 1], plot_points[:, 2], 'o-')
 
-        # plotting legs points
-        rot_orig_leg = [euler_tm(0, tau / 4, 0), euler_tm(tau / 4, tau / 4, 0), euler_tm(tau / 2, tau / 4, 0),
-                        euler_tm(-tau / 4, tau / 4, 0)]
-
         for i, leg in enumerate(robot.arms):
 
-            rotated_pts = rot @ rot_orig_leg[i] @ leg.pos.reshape(3, 1)
+            rotated_pts = rot @ get_rot_leg_orig(i) @ leg.pos.reshape(3, 1)
             point = body_pts[i]
             x, y, z = rotated_pts.reshape(3) + point
 
@@ -67,10 +63,9 @@ class Plot:
 
             # calculate leg pos
             xs, ys, zs = [[p] for p in point.reshape(3)]
-            rot_leg = rot_orig_leg[i]
-            for i in range(4):
-                pos = leg.fwkin(joint=i + 1, disp=True)
-                pos = rot @ rot_leg @ pos
+            for j in range(4):
+                pos = leg.fwkin(joint=j + 1, disp=True)
+                pos = rot @ get_rot_leg_orig(i) @ pos
                 xy, yy, zy = pos.reshape(3) + point
                 xs.append(xy)
                 ys.append(yy)

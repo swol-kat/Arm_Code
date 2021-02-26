@@ -47,8 +47,8 @@ class Robot:
         for arm in self.arms:
             arm.update()
         self.plot.plot(self)
-        if self.gait:
-            self.gait.loop(self)
+        # if self.gait:
+        #     self.gait.loop(self)
         for arm in self.arms:
             arm.loop()
 
