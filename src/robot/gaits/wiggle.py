@@ -1,7 +1,7 @@
 import numpy as np
 
 from .gait import Gait
-from src.util.src.stuff.robot_util import get_body_pts, get_rot_leg_orig
+from src.kat_util.src.stuff.robot_util import get_body_pts, get_rot_leg_orig
 
 
 class Wiggle(Gait):

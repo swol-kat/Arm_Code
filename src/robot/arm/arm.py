@@ -1,15 +1,12 @@
 import math
+
 import numpy as np
 
-import time
-from .util.kinematics import htm
-from .util import quintic
-from .util import Plot
-from copy import copy
+from ...katutil import htm
 
 
 class Arm:
-    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
+    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars,):
         self.lower_axis = lower_axis
         self.upper_axis = upper_axis
         self.shoulder_axis = shoulder_axis
@@ -23,10 +20,6 @@ class Arm:
         self.vel = np.zeros((3, 1))
         self.force = np.zeros((3, 1))
         self.contact = True
-
-        self.plot = False
-        if plot:
-            self.plot = Plot()
 
         self.update()
 
@@ -68,24 +61,7 @@ class Arm:
         self.send_to_pos(thetas)
         self.update()
 
-    def go_to(self, target_pos, movement_time=.5, dog=True):
-        start_time = time.time()
-        elapsed_time = time.time() - start_time
-        start_pos = copy(self.pos)
-        diff = target_pos - start_pos
-        while elapsed_time <= movement_time:
-            perc_move = quintic(elapsed_time / movement_time)
 
-            new_target = diff * perc_move + start_pos
-
-            thetas = self.ikin(new_target, dog)
-            self.send_to_pos(thetas)
-
-            elapsed_time = time.time() - start_time
-            self.update()
-            time.sleep(.01)
-
-        print('reached')
 
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths
@@ -163,9 +139,6 @@ class Arm:
         self.vel = self.get_tip_vel()
 
         self.force = self.get_tip_force()
-
-        if self.plot:
-            self.plot.plot(self)
 
     def home_arm(self):
         print("homing shoudler")

@@ -1,10 +1,9 @@
 import json
 
-from arm import Arm
-from arm.joint.virtual_joint import VirtualJoint
+from .arm import Arm
+from .arm.joint.virtual_joint import VirtualJoint
 from gaits import Gait, Wiggle
-from src.util import Plot
-from src.util import BodyState
+from ..katutil import BodyState, Plot
 
 
 class Robot:
