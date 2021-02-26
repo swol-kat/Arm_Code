@@ -34,8 +34,8 @@ class Robot:
             arm.home_arm()
             arm.home_arm()
 
-        self.base_state = BodyState(z=13)
-        self.target_base_state = BodyState(z=13)
+        self.base_state = BodyState(z=11)
+        self.target_base_state = BodyState(z=11)
 
         self.gait = Wiggle()
 
@@ -44,11 +44,12 @@ class Robot:
         main control loop of robot run this in a while loop or something
         :return:
         """
+        self.base_state = self.target_base_state
         for arm in self.arms:
             arm.update()
         self.plot.plot(self)
-        # if self.gait:
-        #     self.gait.loop(self)
+        if self.gait:
+            self.gait.loop(self)
         for arm in self.arms:
             arm.loop()
 

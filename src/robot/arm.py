@@ -12,8 +12,8 @@ class Arm:
         self.shoulder_axis = shoulder_axis
         self.arm_vars = arm_vars
 
-        self.target_pos = np.array([[0], [0], [0]])
         self.thetas = np.array([[0], [0], [0]])
+        self.target_pos = self.fwkin()
         self.pos = np.array([[0.], [0.], [0.]])
         self.joint_vel = np.array([[0], [0], [0]])
         self.joint_torque = np.array([[0], [0], [0]])
