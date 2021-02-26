@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from ...katutil import htm
+from .util import htm
 
 
 class Arm:

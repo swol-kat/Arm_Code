@@ -1,9 +1,9 @@
 import json
 
 from .arm import Arm
-from .arm.joint.virtual_joint import VirtualJoint
-from gaits import Gait, Wiggle
-from ..katutil import BodyState, Plot
+from .virtual_joint import VirtualJoint
+from .gaits import Gait, Wiggle
+from .util import BodyState, Plot
 
 
 class Robot:
@@ -57,7 +57,7 @@ class Robot:
         reloads the robot_config file
         :return:
         """
-        self.config = json.load(open('robot_config.json'))
+        self.config = json.load(open('./robot/robot_config.json'))
 
 
 if __name__ == "__main__":

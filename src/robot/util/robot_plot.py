@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .kinematics import euler_tm
+from .robot_util import get_body_pts
 
 
 class Plot:
@@ -12,26 +13,26 @@ class Plot:
         self.ax = self.fig.add_subplot(111, projection='3d')
 
         self.fig.show()
-        self.width = 20.
-        self.length = 30.
 
     def config_plt(self):
         # self.ax = self.fig.add_subplot(111, projection='3d')
-        self.ax.set_xlim([-50, 50])
-        self.ax.set_ylim([-50, 50])
+        self.ax.set_xlim([-20, 20])
+        self.ax.set_ylim([-20, 20])
         self.ax.set_zlim([0, 30])
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')
 
-    def plot(self, base_state: np.array, arms: list):
+    def plot(self, robot):
         """
-        :param arms: list
-        :type base_state: np.array
+        :param robot:
         takes in base state and arms param and plots them
         :return:
         """
-        xcg, ycg, zcg, psi, theta, phi = base_state.reshape(6)
+        xcg, ycg, zcg, psi, theta, phi = list(robot.base_state)
+
+        width = robot.config["width"]
+        length = robot.config["length"]
 
         # clearing and configing plot
         self.ax.clear()
@@ -40,41 +41,37 @@ class Plot:
         self.ax.plot(0, 0, 0, marker='o', markersize=3, color="red")
         self.ax.plot(0, 0, zcg, marker='o', markersize=3, color="blue")
         # calculate body points from body
-        body_x = [self.width, -self.width, -self.width, self.width, self.width]
-        body_y = [self.length, self.length, -self.length, -self.length, self.length]
-        body_z = [0, 0, 0, 0, 0]
+
+        body_pts = get_body_pts(robot.base_state, width, length)
 
         rot = euler_tm(phi, theta, psi)
-        # rotate body points by euler angle
-        for i in range(len(body_x)):
-            point = np.array([body_x[i], body_y[i], body_z[i]]).reshape(3, 1)
-            new_point = rot @ point
-            body_x[i], body_y[i], body_z[i] = new_point.reshape(3)
-            body_z[i] += zcg
 
-        self.ax.plot(body_x, body_y, body_z, 'o-')
+        plot_points = body_pts
+        plot_points.append(body_pts[0])
+        plot_points = np.array(plot_points)
+        self.ax.plot(plot_points[:, 0], plot_points[:, 1], plot_points[:, 2], 'o-')
 
         # plotting legs points
         rot_orig_leg = [euler_tm(0, tau / 4, 0), euler_tm(tau / 4, tau / 4, 0), euler_tm(tau / 2, tau / 4, 0),
                         euler_tm(-tau / 4, tau / 4, 0)]
 
-        for i, leg in enumerate(arms):
+        for i, leg in enumerate(robot.arms):
 
             rotated_pts = rot @ rot_orig_leg[i] @ leg.pos.reshape(3, 1)
-            body_pts = np.array([body_x[i], body_y[i], body_z[i]])
-            x, y, z = rotated_pts.reshape(3) + body_pts
+            point = body_pts[i]
+            x, y, z = rotated_pts.reshape(3) + point
 
             color = 'red'
             if leg.contact:
                 color = 'green'
 
             # calculate leg pos
-            xs, ys, zs = [[p] for p in body_pts.reshape(3)]
+            xs, ys, zs = [[p] for p in point.reshape(3)]
             rot_leg = rot_orig_leg[i]
             for i in range(4):
                 pos = leg.fwkin(joint=i + 1, disp=True)
                 pos = rot @ rot_leg @ pos
-                xy, yy, zy = pos.reshape(3) + body_pts
+                xy, yy, zy = pos.reshape(3) + point
                 xs.append(xy)
                 ys.append(yy)
                 zs.append(zy)
