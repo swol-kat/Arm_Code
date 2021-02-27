@@ -8,7 +8,7 @@ class Odrive_Controller:
 
     def send_packet():
 
-        if self.state = 'set_params':
+        if self.state == 'set_params':
             def set_odrive_params(drive, out_dict):
                 drive.axis0.encoder.config.abs_spi_cs_gpio_pin = 4
                 drive.axis1.encoder.config.abs_spi_cs_gpio_pin = 5

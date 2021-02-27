@@ -26,7 +26,7 @@ def odrive_worker(serial, conn):
         out_data['axis_1'] = {}
         out_data['odrive'] = {}
 
-        #run given functions on assigned axes
+        #run given functions on assigned axes if available
         if command['axis_0']['function']:
             command['axis_0']['function'](od.axis0, out_data['axis_0'])
         if command['axis_1']['function']:    
@@ -34,10 +34,10 @@ def odrive_worker(serial, conn):
         if command['odrive']:
             command['odrive'](od, out_data['odrive'])
 
-        #index command is necessary
+        #index command is necessary. added in odrive handler
         out_data['index'] = command['index']
         
-        #pos, curr commands automatically done. must be sent
+        #pos, curr commands automatically done. must be sent in control packets
         od.axis0.controller.input_pos = command['axis_0']['pos_command']
         od.axis1.controller.input_pos = command['axis_1']['pos_command']
         od.axis0.motor.config.current_lim = ['axis_0']['curr_command']
@@ -60,19 +60,23 @@ print('starting processes')
 
 for serial in serials:
     to_worker, to_main = Pipe()
-    joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
-    joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
-    odrive_controllers.append(Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
-    process_list.append(Process(target=odrive_worker, args=(serial, odrive_pipes[-1].to_worker, )))
+    joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
+    joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
+    odrive_controllers.append(Odrive_Controller.Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
+    process_list.append(Process(target=odrive_worker, args=(serial, to_worker, )))
     process_list[-1].start()
-    good = to_main.recv() #just wait for thread to find odrive
+    good = to_main.recv() #just wait for thread to respond so we know that it found the odrive
+
+#initialize arm variables - move to JSON file eventually
+arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
 #make arm objects
-
-
+arm_dict = {}
+arm_dict['right_arm'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables)
+arm_dict['left_arm'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables)
 
 #start gui worker - needs arm object
-process_list.append(Process(target=gui_worker, args=(None, )))
+process_list.append(Process(target=gui_worker, args=(arm_dict['right_arm'], )))
 process_list[-1].start()
 
 # main program

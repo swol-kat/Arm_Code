@@ -142,4 +142,5 @@ def gui_worker(arm_comm):
     # loop 
     sys.exit(app.exec_())
 
-gui_worker(None)
+if __name__ == '__main__':
+    gui_worker()
