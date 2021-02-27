@@ -42,7 +42,7 @@ class Plot:
         self.ax.plot(0, 0, zcg, marker='o', markersize=3, color="blue")
         # calculate body points from body
 
-        body_pts = get_body_pts(robot.base_state, width, length)
+        body_pts = get_body_pts(robot.base_state, width, length , True)
 
         rot = euler_tm(phi, theta, psi)
 

@@ -20,7 +20,7 @@ class Wiggle(Gait):
         width = robot.config["width"]
         length = robot.config["length"]
 
-        body_pts = get_body_pts(robot.target_base_state, width, length)
+        body_pts = get_body_pts(robot.target_base_state, width, length, True)
         zero_body_pts = get_body_pts(BodyState(), width, length)
 
         rot = euler_tm(robot.target_base_state.alpha, robot.target_base_state.beta, robot.target_base_state.gamma)
@@ -29,7 +29,6 @@ class Wiggle(Gait):
             # get_taget_foot_pos in world points
 
             target_foot_pos = np.array([zero_body_pts[i][0], zero_body_pts[i][1], 0])
-            body_pt_at_zero = body_pts[i] - np.array([robot.target_base_state.x, robot.target_base_state.y, 0])
-            target_foot_pos = target_foot_pos - body_pt_at_zero
+            target_foot_pos = target_foot_pos - body_pts[i]
             target_foot_pos = get_rot_leg_orig(i).transpose() @ rot.transpose() @ target_foot_pos
             leg.target_pos = target_foot_pos
