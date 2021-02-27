@@ -1,3 +1,5 @@
+from robot import Arm
+
 print('start')
 import odrive
 import odrive.enums
@@ -8,7 +10,7 @@ from collections import namedtuple
 import json
 import matplotlib as plot
 from gui.gui import gui_worker
-from arm.joint import Odrive_Controller, Threaded_Joint
+from robot import Odrive_Controller, Threaded_Joint
 
 odrive_pipe = namedtuple('odrive_pipe', ['to_worker', 'to_main', 'axis_0_name', 'axis_1_name'])
 
@@ -62,7 +64,7 @@ for serial in serials:
     to_worker, to_main = Pipe()
     joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
     joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
-    odrive_controllers.append(Odrive_Controller.Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
+    odrive_controllers.append(Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
     process_list.append(Process(target=odrive_worker, args=(serial, to_worker, )))
     process_list[-1].start()
     good = to_main.recv() #just wait for thread to respond so we know that it found the odrive
@@ -80,8 +82,6 @@ process_list.append(Process(target=gui_worker, args=(arm_dict['right_arm'], )))
 process_list[-1].start()
 
 # main program
-fake_data = axis_command(0, 0)
-fake_odrive_packet = odrive_command(deepcopy(fake_data),deepcopy(fake_data))
 
 quit_loop = False
 while not quit_loop:

@@ -3,6 +3,7 @@ import odrive.enums
 import math
 import time
 
+
 # the functions in Threaded_Joint get_command function may have to be moved to be defined here if they are not picklable as-is
 
 class Threaded_Joint:
@@ -16,34 +17,34 @@ class Threaded_Joint:
         self.curr_current = 0.0
         self.curr_pos = 0.0
         self.curr_vel = 0.0
-        self.last_error_status = {'axis':0, 'motor':0, 'controller':0, 'encoder':0}
-    
+        self.last_error_status = {'axis': 0, 'motor': 0, 'controller': 0, 'encoder': 0}
+
     def angle_to_motor(self, angle):
         return angle * self.gear_ratio / 2 / math.pi
-    
+
     def torque_to_current(self, torque):
         current = abs(torque / self.torque_constant / 8.8507 / self.gear_ratio)
         if current > self.max_current:
             current = self.max_current
         return current
-    
+
     def get_curr_torque(self):
         return self.curr_current * -1.0 * self.torque_constant * 8.8507 * self.gear_ratio
-    
+
     def get_curr_position(self):
         return self.curr_pos / self.gear_ratio * 2 * math.pi
-    
+
     def get_curr_velocity(self):
         return self.curr_vel / self.gear_ratio * 2 * math.pi
-    
+
     def set_torque(self, torque):
         self.torque_limit = torque
-    
+
     def set_setpoint(self, position):
         self.pos_command = position
 
     def get_command(self):
-        #this is called every loop to send data to motor worker. form packet in command_dict
+        # this is called every loop to send data to motor worker. form packet in command_dict
         command_dict = {}
         if self.state == 'halt':
             def set_state_to_halt(axis, output_dict):
@@ -67,7 +68,7 @@ class Threaded_Joint:
         if self.state == 'wait_calibrate':
             def check_curr_state(axis, output_dict):
                 output_dict['curr_state'] = axis.requested_state.current_state
-            
+
             command_dict['command'] = check_curr_state
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
@@ -75,7 +76,7 @@ class Threaded_Joint:
         if self.state == 'run':
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-        
+
         if self.state == 'enable':
             def enable_axis(axis, output_dict):
                 axis.clear_errors()
@@ -94,15 +95,15 @@ class Threaded_Joint:
             command_dict['command'] = disable_axis
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-        
+
         if self.state == 'configure':
             def configure_axis(axis, output_dict):
                 axis.encoder.config.mode = 257
                 axis.encoder.config.cpr = 16384
-                #self.odrive_axis.encoder.config.abs_spi_cs_gpio_pin = encoder_cs_pin
-                #gotta figure out how to do GPIO config. should come from odrive controller. new class for odrive functions needed
+                # self.odrive_axis.encoder.config.abs_spi_cs_gpio_pin = encoder_cs_pin
+                # gotta figure out how to do GPIO config. should come from odrive controller. new class for odrive functions needed
                 axis.motor.config.pole_pairs = 20
-                axis.motor.config.torque_constant = 8.27/160
+                axis.motor.config.torque_constant = 8.27 / 160
                 axis.motor.config.current_lim = 10.0
                 axis.motor.config.current_lim_margin = 1000
                 axis.motor.config.torque_lim = 10000
@@ -121,51 +122,51 @@ class Threaded_Joint:
             command_dict['command'] = configure_axis
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
-        
+
         if self.state == 'get_errors':
             def get_errors(axis, output_dict):
                 output_dict['encoder'] = axis.encoder.error
                 output_dict['axis'] = axis.error
                 output_dict['motor'] = axis.motor.error
                 output_dict['controller'] = axis.controller.error
-            
+
             command_dict['command'] = get_errors
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
-        
+
         if self.state == 'home':
-            self.pos_command = 0.0 #don't yeet the arm
+            self.pos_command = 0.0  # don't yeet the arm
+
             def home_axis(axis, output_dict):
                 axis.requested_state = odrive.enums.AXIS_STATE_IDLE
                 axis.encoder.set_linear_count(0)
                 axis.controller.input_pos = 0.0
                 axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
                 output_dict['home_complete'] = True
-            
+
             command_dict['command'] = home_axis
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
 
-
         return command_dict
 
     def recieve_data(self, data_dict):
-        #called when valid data comes back. index checked so guaranteed most recent
+        # called when valid data comes back. index checked so guaranteed most recent
 
-        #always update these values because they are coming in
+        # always update these values because they are coming in
         self.curr_current = data_dict['data']['current']
         self.curr_pos = data_dict['data']['pos']
         self.curr_vel = data_dict['data']['vel']
 
         if self.state == 'halt':
-            #current readings will freeze if motor is not enabled
+            # current readings will freeze if motor is not enabled
             self.curr_current = 0.0
             return
-        
+
         if self.state == 'wait_calibrate':
             if 'curr_state' in data_dict and data_dict['curr_state'] == odrive.enums.AXIS_STATE_IDLE:
                 self.state = 'halt'
-                #motor needs to be enabled after calibration
+                # motor needs to be enabled after calibration
             return
 
         if self.state == 'run':
@@ -177,7 +178,7 @@ class Threaded_Joint:
                     self.state = 'run'
                 if data_dict['curr_state'] == odrive.enums.AXIS_STATE_IDLE:
                     self.state = 'halt'
-                    #how to tell if errored out?
+                    # how to tell if errored out?
             return
 
         if self.state == 'disable':
@@ -188,21 +189,21 @@ class Threaded_Joint:
         if self.state == 'configure':
             if 'config_complete' in data_dict and data_dict['config_complete'] == True:
                 self.state = 'halt'
-        
+
         if self.state == 'get_errors':
             if data_dict['axis']:
                 self.last_error_status['axis'] = data_dict['axis']
                 self.last_error_status['motor'] = data_dict['motor']
                 self.last_error_status['controller'] = data_dict['controller']
                 self.last_error_status['encoder'] = data_dict['encoder']
-                self.state = 'run' #don't stop running if checking errors. 
-        
+                self.state = 'run'  # don't stop running if checking errors.
+
         if self.state == 'home':
             if 'home_complete' in data_dict and data_dict['home_complete'] == True:
                 self.state = 'run'
 
     def calibrate(self):
-        #only calibrate if in correct state to
+        # only calibrate if in correct state to
         if self.state == 'halt' or self.state == 'run':
             self.state = 'calibrate'
 
@@ -215,7 +216,7 @@ class Threaded_Joint:
     def enable(self):
         if self.state == 'halt':
             self.state = 'enable'
-    
+
     def disable(self):
         self.state = 'disable'
 
@@ -224,7 +225,7 @@ class Threaded_Joint:
 
     def get_setpoint(self):
         return self.pos_command
-    
+
     def poll_errors(self):
         self.state = 'get_errors'
 
@@ -238,9 +239,9 @@ class Threaded_Joint:
 
     def is_calibration_complete(self):
         return self.state != odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-    
+
     def home(self):
         self.state = 'home'
-    
+
     def is_home_complete(self):
         return self.state != 'home'
