@@ -62,8 +62,8 @@ print('starting processes')
 
 for serial in serials:
     to_worker, to_main = Pipe()
-    joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
-    joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint.Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
+    joint_dict[axis_dict[serial]['axis0']['name']] = Threaded_Joint(axis_dict[serial]['axis0']['ratio'], 8.27 / 160)
+    joint_dict[axis_dict[serial]['axis1']['name']] = Threaded_Joint(axis_dict[serial]['axis1']['ratio'], 8.27 / 160)
     odrive_controllers.append(Odrive_Controller(to_main, joint_dict[axis_dict[serial]['axis0']['name']], joint_dict[axis_dict[serial]['axis1']['name']]))
     process_list.append(Process(target=odrive_worker, args=(serial, to_worker, )))
     process_list[-1].start()
