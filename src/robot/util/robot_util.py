@@ -14,7 +14,7 @@ def get_body_pts(state: BodyState, width: float, length: float, zero=False):
     """
     cg = np.array([state.x, state.y, state.z])
     if zero:
-        # set cg loc to zero zero for x,y
+        # set cg loc to zero zero for x,y0
         cg[0:2]= [0 ,0]
 
     body_pts = [[width / 2, length / 2, 0], [-width / 2, length / 2, 0], [-width / 2, -length / 2, 0],
