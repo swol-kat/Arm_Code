@@ -29,6 +29,7 @@ class Wiggle(Gait):
             # get_taget_foot_pos in world points
 
             target_foot_pos = np.array([zero_body_pts[i][0], zero_body_pts[i][1], 0])
-            target_foot_pos = target_foot_pos - body_pts[i]
+            body_pt_at_zero = body_pts[i] - np.array([robot.target_base_state.x, robot.target_base_state.y, 0])
+            target_foot_pos = target_foot_pos - body_pt_at_zero
             target_foot_pos = get_rot_leg_orig(i).transpose() @ rot.transpose() @ target_foot_pos
             leg.target_pos = target_foot_pos
