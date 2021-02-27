@@ -27,7 +27,7 @@ def setup():
 
     arm_dict['right_arm'] = Arm(output_dict['1 lower'], output_dict['1 upper'], output_dict['1 shoulder'], arm_variables)
 
-    arm_dict['left_arm'] = Arm(output_dict['2 lower'], output_dict['2 upper'], output_dict['2 shoulder'], arm_variables)
+    #arm_dict['left_arm'] = Arm(output_dict['2 lower'], output_dict['2 upper'], output_dict['2 shoulder'], arm_variables)
 
     for name, arm in arm_dict.items():
         print(f"calibrating {name}")

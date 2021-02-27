@@ -2,6 +2,9 @@ import math
 
 import numpy as np
 
+import time
+from copy import copy, deepcopy
+from .joint import Threaded_Joint
 from .util import htm
 
 
@@ -14,14 +17,16 @@ class Arm:
 
         self.thetas = np.array([[0], [0], [0]])
         self.target_pos = self.fwkin()
-        self.pos = np.array([[0.], [0.], [0.]])
         self.joint_vel = np.array([[0], [0], [0]])
         self.joint_torque = np.array([[0], [0], [0]])
-        self.vel = np.zeros((3, 1))
-        self.force = np.zeros((3, 1))
-        self.contact = True
+        self.tip_force_limit = np.array([[3],[3],[3]])
+        self.pos = np.array([[0.], [0.], [0.]])
+        self.vel = np.zeros((3,1))
+        self.force = np.zeros((3,1))
+        self.last_update_time = time.time()
+        self.state = 'idle'
+        self.last_error_update = time.time()
 
-        self.update()
 
     def ikin(self, pos_vect, dog=True):
         x, y, z = pos_vect.reshape(3)
@@ -50,23 +55,8 @@ class Arm:
         t3 = t2 + t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
-    def send_to_pos(self, thetas):
-        t1, t2, t3 = thetas.reshape(3)
-        self.shoulder_axis.set_setpoint(t1)
-        self.upper_axis.set_setpoint(t2)
-        self.lower_axis.set_setpoint(t3)
-
-    def go_to_raw(self, target_pos, dog=True):
-        thetas = self.ikin(target_pos, dog)
-        self.send_to_pos(thetas)
-        self.update()
-
-
-
-    def set_current_limits(self, min_force, max_force):
-        # know the jacobian and maths
-        # F_tip = T * J(q)
-        pass
+    def set_tip_force_limit(self, x, y, z):
+        self.tip_force_limit = np.array([[x],[y],[z]])
 
     def jacobian(self, thetas=None):
         if not thetas:
@@ -83,7 +73,7 @@ class Arm:
             Jo = z
             Ji = np.concatenate((Jp.reshape((3, 1)), Jo.reshape((3, 1))), axis=0)
             J = np.concatenate((J, Ji), axis=1)
-
+        
         return np.delete(J, 0, 1)
 
     def fwkin(self, thetas=None, joint=3, vector=True, disp=False):
@@ -119,49 +109,22 @@ class Arm:
 
         return t_final
 
-    def update(self):
-        # gets angle from each of the three joints
+    def export_data(self):
+        joint_pos = self.get_joint_pos()
+        forces = deepcopy(self.force.reshape(3))
+        joint_pos['x'].append(forces[0] + joint_pos['x'][-1])
+        joint_pos['y'].append(forces[1] + joint_pos['y'][-1])
+        joint_pos['z'].append(forces[2] + joint_pos['z'][-1])
 
-        t1 = self.shoulder_axis.get_pos()
-        t2 = self.upper_axis.get_pos()
-        t3 = self.lower_axis.get_pos()
-
-        self.thetas = np.array([[t1], [t2], [t3]])
-
-        self.pos = self.fwkin()
-
-        self.joint_vel = np.array(
-            [[self.shoulder_axis.get_vel()], [self.upper_axis.get_vel()], [self.lower_axis.get_vel()]])
-
-        self.joint_torque = np.array(
-            [[self.shoulder_axis.get_torque()], [self.upper_axis.get_torque()], [self.lower_axis.get_torque()]])
-
-        self.vel = self.get_tip_vel()
-
-        self.force = self.get_tip_force()
-
-    def home_arm(self):
-        print("homing shoudler")
-        self.shoulder_axis.run_manual_homing_routine()
-        print("homing upper")
-        self.upper_axis.run_manual_homing_routine()
-        print("homing lower")
-        self.lower_axis.run_manual_homing_routine()
-
-    def calibrate_arm(self):
-        self.shoulder_axis.calibrate_joint()
-        self.upper_axis.calibrate_joint()
-        self.lower_axis.calibrate_joint()
-
-    def enable_arm(self):
-        self.shoulder_axis.enable_joint()
-        self.upper_axis.enable_joint()
-        self.lower_axis.enable_joint()
-
-    def fuck(self):
-        self.shoulder_axis.fuck()
-        self.upper_axis.fuck()
-        self.lower_axis.fuck()
+        return {
+            'joint_pos': joint_pos,
+            'thetas': self.thetas.reshape(3).tolist(),
+            'pos': self.pos.reshape(3).tolist(),
+            'joint_vel': self.joint_vel.reshape(3).tolist(),
+            'joint_torque': self.joint_torque.reshape(3).tolist(),
+            'vel': self.vel.reshape(3).tolist(),
+            'force': self.force.reshape(3).tolist(),
+        }
 
     def get_joint_pos(self):
         xs = [0]
@@ -178,8 +141,37 @@ class Arm:
             'y': ys,
             'z': zs
         }
+    
+    def get_tip_vel(self):
+        jacob = self.jacobian()[0:3,:]
 
-    def jog(self, thetas, pos):
+        tip_vel = jacob @ self.joint_vel
+
+        return tip_vel.reshape((3,1))
+
+    def get_tip_force(self):
+        jacob = self.jacobian()[0:3,:]
+
+        tip_force = np.linalg.pinv(np.transpose(jacob)) @ self.joint_torque
+
+        return tip_force.reshape((3,1))
+
+    def go_to_thetas(self, thetas):
+        t1, t2, t3 = thetas.reshape(3)
+        #check if elbow over travel. don't let joint go too far
+        if t3-t2 > math.pi * 0.75 :
+            t3 = t2 + math.pi * 0.75
+        if t3-t2 < math.pi * -0.5 :
+            t3 = t2 - math.pi * 0.5
+        self.shoulder_axis.set_setpoint(t1)
+        self.upper_axis.set_setpoint(t2)
+        self.lower_axis.set_setpoint(t3)
+
+    def send_to_pos(self, target_pos, dog = True):
+        thetas = self.ikin(target_pos, dog)
+        self.go_to_thetas(thetas)
+
+    def jog(self,thetas,pos):
         if thetas and np.sum(thetas) != 0:
             thetas = np.array(thetas).reshape((3, 1))
             self.send_to_pos(self.thetas + thetas)
@@ -187,37 +179,67 @@ class Arm:
             pos = np.array(pos).reshape((3, 1))
             self.go_to_raw(self.pos + pos, False)
 
-    def export_data(self):
-        return {
-            'joint_pos': self.get_joint_pos(),
-            'thetas': self.thetas.reshape(3).tolist(),
-            'pos': self.pos.reshape(3).tolist(),
-            'joint_vel': self.joint_vel.reshape(3).tolist(),
-            'joint_torque': self.joint_torque.reshape(3).tolist(),
-            'vel': self.vel.reshape(3).tolist(),
-            'force': self.force.reshape(3).tolist(),
-        }
+    def calibrate_arm_start(self):
+        print("calibrating arm")
+        self.shoulder_axis.start_calibration()
+        self.upper_axis.start_calibration()
+        self.lower_axis.start_calibration()
+    
+    def is_arm_calibrated(self):
+        return self.lower_axis.is_calibration_complete() and self.upper_axis.is_calibration_complete() and self.shoulder_axis.is_calibration_complete()
+    
+    def stop(self):
+        self.shoulder_axis.disable()
+        self.upper_axis.disable()
+        self.lower_axis.disable()
+
+    def enable(self):
+        self.shoulder_axis.enable()
+        self.upper_axis.enable()
+        self.lower_axis.enable()
+    
+    def poll_errors(self):
+        #errors will be checked on odrives and get_error will be updated
+        self.last_update_time = time.time()
+        self.shoulder_axis.poll_errors()
+        self.upper_axis.poll_errors()
+        self.lower_axis.poll_errors()
 
     def get_error(self):
+        #needs logic to send the error request to joint, then recieve error message
         return {
-            'shoulder': self.shoulder_axis.get_error(),
-            'upper': self.upper_axis.get_error(),
-            'lower': self.lower_axis.get_error()
+            'shoulder': self.shoulder_axis.get_errors(),
+            'upper': self.upper_axis.get_errors(),
+            'lower': self.lower_axis.get_errors(),
+            'time': self.last_update_time
         }
+    
+    #TODO: implement Arm homing program in joint and arm code
 
-    def get_tip_vel(self):
-        jacob = self.jacobian()[0:3, :]
+    def update(self): 
+        # gets angle from each of the three joints
+        t1 = self.shoulder_axis.get_curr_position()
+        t2 = self.upper_axis.get_curr_position()
+        t3 = self.lower_axis.get_curr_position()
 
-        tip_vel = np.transpose(jacob) @ self.joint_vel
+        self.thetas = np.array([[t1], [t2], [t3]])
 
-        return tip_vel.reshape((3, 1))
+        self.pos = self.fwkin()
 
-    def get_tip_force(self):
-        jacob = self.jacobian()[0:3, :]
+        self.joint_vel = np.array([[self.shoulder_axis.get_curr_velocity()], [self.upper_axis.get_curr_velocity()], [self.lower_axis.get_curr_velocity()]])
 
-        tip_force = np.transpose(jacob) @ self.joint_torque
+        self.joint_torque = np.array([[self.shoulder_axis.get_curr_torque()], [self.upper_axis.get_curr_torque()], [self.lower_axis.get_curr_torque()]])
 
-        return tip_force.reshape((3, 1))
+        self.vel = self.get_tip_vel()
 
-    def loop(self):
-        self.go_to_raw(self.target_pos)
+        self.force = self.get_tip_force()
+
+        # do tip forces
+        curr_force = self.get_tip_force()
+        delta = np.abs(self.tip_force_limit) - np.abs(curr_force)
+        torque_delta = np.transpose(self.jacobian()[0:3,:]) @ delta
+        self.shoulder_axis.set_torque(np.abs(self.shoulder_axis.get_torque()) + torque_delta[0])
+        self.upper_axis.set_torque(np.abs(self.upper_axis.get_torque()) + torque_delta[1])
+        self.lower_axis.set_torque(np.abs(self.lower_axis.get_torque()) + torque_delta[2])
+
+        self.last_update_time = time.time()
