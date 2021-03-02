@@ -1,5 +1,3 @@
-from math import tau
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -22,6 +20,7 @@ class Plot:
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')
+        self.ax.text(0, 10, 0, 'Front is here')
 
     def plot(self, robot):
         """
@@ -42,7 +41,7 @@ class Plot:
         self.ax.plot(0, 0, zcg, marker='o', markersize=3, color="blue")
         # calculate body points from body
 
-        body_pts = get_body_pts(robot.base_state, width, length , True)
+        body_pts = get_body_pts(robot.base_state, width, length, True)
 
         rot = euler_tm(phi, theta, psi)
 
@@ -75,6 +74,7 @@ class Plot:
 
             # convert from foot space to world space
             self.ax.plot(x, y, z, marker='o', markersize=5, color=color)
+
         self.fig.canvas.draw()
 
 

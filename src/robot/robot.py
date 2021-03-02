@@ -23,10 +23,10 @@ class Robot:
         :return:
         """
         self.arms = [
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data']),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'])
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 1),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 2),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 3),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 4)
         ]
 
         for arm in self.arms:

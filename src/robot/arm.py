@@ -6,7 +6,7 @@ from .util import htm
 
 
 class Arm:
-    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars,):
+    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, corner=1):
         self.lower_axis = lower_axis
         self.upper_axis = upper_axis
         self.shoulder_axis = shoulder_axis
@@ -20,33 +20,44 @@ class Arm:
         self.vel = np.zeros((3, 1))
         self.force = np.zeros((3, 1))
         self.contact = True
+        self.corner = corner
 
         self.update()
 
-    def ikin(self, pos_vect, dog=True):
+    def ikin(self, pos_vect):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
-        # t1
-        r = math.hypot(x, y)
-        u = math.sqrt(r ** 2 - d2 ** 2)
-        alpha = math.atan2(y, x)
-        beta = math.atan2(d2, u)
 
-        t1 = alpha - beta
+        r = math.hypot(x, y)
+        alpha = math.atan2(y, x)
+        u = math.sqrt(r ** 2 - d2 ** 2)
+        beta = math.atan2(d2, u)
+        # t1
+        if self.corner in (2, 4):
+            t1 = alpha - beta
+
+        else:
+            t1 = alpha + beta + math.tau / 2
 
         s = z - d1
-        l = math.hypot(s, u)
-        D = (l ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+        D = (r ** 2 + s ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+
         # making sure D doesnt excced -1 one cause floating points
         D = min(max(D, -1), 1)
         # t2
-        if dog:
+        if self.corner in (1, 2):
             t3 = - math.atan2(math.sqrt(1 - D ** 2), D)
         else:
             t3 = - math.atan2(- math.sqrt(1 - D ** 2), D)
-        phi = math.atan2(s, u)
+        phi = math.atan2(s, r)
         gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
-        t2 = - (gamma + phi)
+
+        if self.corner in (1,3):
+            t2 = (phi + gamma) + math.tau/2
+            t3 = -t3
+        else:
+            t2 = - (phi + gamma)
+
         t3 = t2 + t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
@@ -56,12 +67,10 @@ class Arm:
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
 
-    def go_to_raw(self, target_pos, dog=True):
-        thetas = self.ikin(target_pos, dog)
+    def go_to_raw(self, target_pos):
+        thetas = self.ikin(target_pos)
         self.send_to_pos(thetas)
         self.update()
-
-
 
     def set_current_limits(self, min_force, max_force):
         # know the jacobian and maths
