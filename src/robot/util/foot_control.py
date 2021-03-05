@@ -1,7 +1,7 @@
 import numpy as np
 from .kinematics import euler_tm
-import matplotlib.pyplot as plt
-from math import tau
+
+from math import factorial
 
 '''
 reference: https://www.mdpi.com/2076-3417/9/7/1508/pdf
@@ -27,14 +27,20 @@ def swing_pos(t, step_height=1.5, step_length=3, phi=0):
 
     bp = [rot @ np.array(p).reshape((3, 1)) for p in bp]  # rotates all points by phi
 
-    bp = [p.reshape(3, 1) for p in bp]
+    bp = [p.reshape(3) for p in bp]
 
-    pos = np.zeros(3, 1)
-    n = len(bp)
+    pos = np.zeros(3)
+    n = len(bp) - 1
     for i, p in enumerate(bp):
-        pos += (1 - t) ** (n - i) * (t ** i) * p
+        __bezier_polynomial(n, i)
+
+        pos += __bezier_polynomial(n, i) * (1 - t) ** (n - i) * (t ** i) * p
 
     return pos
+
+
+def __bezier_polynomial(n, i):
+    return factorial(n) / (factorial(i) * factorial(n - i))
 
 
 def __gen_bezier_points(step_height, step_length):
@@ -62,29 +68,5 @@ def __gen_bezier_points(step_height, step_length):
         [step_length * 1.05, 0, 0],
         [step_length, 0, 0]
     ]
-
-
-if __name__ == "__main__":
-    test = [
-        (1.5,3, 0), (1.5,3, tau/4) , (1.5,3, tau/2)
-    ]
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    fig.show()
-
-    ax.set_xlim([-2, 10])
-    ax.set_ylim([-10, 10])
-    ax.set_zlim([0, 10])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.legent()
-
-    for step_height, step_length, phi in test:
-        for i in np.linspace(0,1):
-            x,y,z = swing_pos(i, step_height, step_length, phi)
-            ax.plot(x, y, z, '-', label=f'sh:{step_height}, sl:{step_length}, phi:{phi} ')
-
 
 
