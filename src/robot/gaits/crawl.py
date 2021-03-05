@@ -9,7 +9,7 @@ class Crawl(Gait):
     def __init__(self):
         super().__init__()
         self.params = {
-            'x_vel': 1,  # forward velocity of quadruped
+            'x_vel': 1,  # forward velocity of quadruped in/s ?
             'cycle time': 5,  # seconds for full cycle aka movement of 4 legs
             'step height': 2,  # inches
         }
