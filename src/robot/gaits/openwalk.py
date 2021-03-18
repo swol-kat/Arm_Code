@@ -1,10 +1,10 @@
+import math
+import time
+
+import numpy as np
+
 from .gait import Gait
 from ..util import get_body_pts, get_rot_leg_orig, euler_tm, swing_pos, ground_pos
-from ..util import BodyState
-import time
-import numpy as np
-import math
-import copy
 
 
 class OpenWalk(Gait):
@@ -12,7 +12,7 @@ class OpenWalk(Gait):
     def __init__(self):
         super().__init__()
         self.params = {
-            'step_time': 3,  # seconds per movment
+            'step_time': .5,  # seconds per movment
             'step_height': 2,  # inches,
         }
         self.last_loop_time = time.time()
@@ -22,7 +22,6 @@ class OpenWalk(Gait):
         self.x_vel = 0
         self.y_vel = 0
         self.count = 0
-        self.prev_leg = [np.zeros(3) for i in range(4)]
 
     def loop(self, robot):
         width = robot.config["width"]
