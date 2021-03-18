@@ -46,3 +46,9 @@ class BodyState:
 
     def __iter__(self):
         return iter([self.x, self.y, self.z, self.gamma, self.beta, self.alpha])
+
+    def move(self, **kwargs):
+        cur_state = dict(self)
+        for key, value in kwargs.items():
+            cur_state[key] += value
+        self.update_state(**cur_state)

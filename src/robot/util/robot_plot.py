@@ -37,11 +37,11 @@ class Plot:
         self.ax.clear()
         self.config_plt()
         # mark center point
-        self.ax.plot(0, 0, 0, marker='o', markersize=3, color="red")
-        self.ax.plot(0, 0, zcg, marker='o', markersize=3, color="blue")
+        self.ax.plot(xcg, ycg, 0, marker='o', markersize=3, color="red")
+        self.ax.plot(xcg, ycg, zcg, marker='o', markersize=3, color="blue")
         # calculate body points from body
 
-        body_pts = get_body_pts(robot.base_state, width, length, True)
+        body_pts = get_body_pts(robot.base_state, width, length, False)
 
         rot = euler_tm(phi, theta, psi)
 

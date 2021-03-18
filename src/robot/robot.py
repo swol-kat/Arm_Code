@@ -2,7 +2,7 @@ import json
 
 from .arm import Arm
 from .virtual_joint import VirtualJoint
-from .gaits import Gait, Wiggle
+from .gaits import Gait, Wiggle, OpenWalk
 from .util import BodyState, Plot
 
 
@@ -12,6 +12,7 @@ class Robot:
     arms: list
     base_state: BodyState
     target_base_state: BodyState
+    movement_vector: dict
 
     def __init__(self):
         self.reload_config()
@@ -23,10 +24,10 @@ class Robot:
         :return:
         """
         self.arms = [
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 1),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 2),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 3),
-            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner = 4)
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner=1),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner=2),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner=3),
+            Arm(VirtualJoint(), VirtualJoint(), VirtualJoint(), self.config['arm_data'], corner=4)
         ]
 
         for arm in self.arms:
@@ -36,6 +37,7 @@ class Robot:
 
         self.base_state = BodyState(z=11)
         self.target_base_state = BodyState(z=11)
+        self.movement_vector = dict(x=0, y=0, z=0, alpha=0, beta=0, gamma=0)
 
         self.gait = Wiggle()
 
