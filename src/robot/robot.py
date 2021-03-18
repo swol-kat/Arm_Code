@@ -39,7 +39,7 @@ class Robot:
         self.target_base_state = BodyState(z=11)
         self.movement_vector = dict(x=0, y=0, z=0, alpha=0, beta=0, gamma=0)
 
-        self.gait = Wiggle()
+        self.gait = OpenWalk()
 
     def loop(self):
         """

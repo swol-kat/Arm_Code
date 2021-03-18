@@ -19,7 +19,7 @@ class Wiggle(Gait):
         :param robot: takes in the robot object
         :return:
         """
-        delta_t = (self.last_time-time.time())
+        delta_t = (time.time()-self.last_time)
 
         pos_adjust = {k: v*delta_t for k,v in robot.movement_vector.items()}
         print(robot.movement_vector)

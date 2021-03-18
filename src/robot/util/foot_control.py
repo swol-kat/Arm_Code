@@ -39,6 +39,13 @@ def swing_pos(t, step_height=1.5, step_length=3, phi=0):
     return pos
 
 
+def ground_pos(t, step_length=3, phi=0):
+    p = [-step_length * t, 0, 0]
+    rot = euler_tm(phi, 0, 0)
+    p_rot = rot @ np.array(p).reshape(3, 1)
+    return p_rot.reshape(3)
+
+
 def __bezier_polynomial(n, i):
     return factorial(n) / (factorial(i) * factorial(n - i))
 
@@ -68,5 +75,3 @@ def __gen_bezier_points(step_height, step_length):
         [step_length * 1.05, 0, 0],
         [step_length, 0, 0]
     ]
-
-

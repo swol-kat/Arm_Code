@@ -5,20 +5,20 @@ import keyboard
 
 r = Robot()
 r.boot()
-movement_amount = 1  # in/s
+movement_amount =2  # in/s
 key_dict = {
-    'w': {'axis': 'y', 'dir': -1.},
-    's': {'axis': 'y', 'dir': 21.},
-    'a': {'axis': 'x', 'dir': 1.},
-    'd': {'axis': 'x', 'dir': -1.},
+    'w': {'axis': 'y', 'dir': 1.},
+    's': {'axis': 'y', 'dir': -1.},
+    'a': {'axis': 'x', 'dir': -1.},
+    'd': {'axis': 'x', 'dir': 1.},
     'up': {'axis': 'z', 'dir': 1.},
     'down': {'axis': 'z', 'dir': -1.},
-    'i': {'axis': 'gamma', 'dir': .1},
-    'k': {'axis': 'gamma', 'dir': -.1},
+    'i': {'axis': 'gamma', 'dir': -.1},
+    'k': {'axis': 'gamma', 'dir': .1},
     'l': {'axis': 'beta', 'dir': .1},
     'j': {'axis': 'beta', 'dir': -.1},
-    'right': {'axis': 'alpha', 'dir': .1},
-    'left': {'axis': 'alpha', 'dir': -.1},
+    'right': {'axis': 'alpha', 'dir': -.1},
+    'left': {'axis': 'alpha', 'dir': .1},
 }
 
 while True:
