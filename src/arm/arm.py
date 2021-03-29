@@ -3,12 +3,12 @@ import numpy as np
 
 import time
 from .util.kinematics import htm
-from .util import quintic
+from .util.trajectory import quintic
 from .joint import Threaded_Joint
 from copy import copy, deepcopy
 
 class Arm:
-    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, plot=False):
+    def __init__(self, lower_axis, upper_axis, shoulder_axis, arm_vars, corner=1):
         self.lower_axis = lower_axis
         self.upper_axis = upper_axis
         self.shoulder_axis = shoulder_axis
@@ -24,8 +24,9 @@ class Arm:
         self.last_update_time = time.time()
         self.state = 'idle'
         self.last_error_update = time.time()
+        self.corner = corner
 
-    def ikin(self, pos_vect, dog=True):
+    def ikin(self, pos_vect):
         x, y, z = pos_vect.reshape(3)
         d1, d2, a2, a3 = self.arm_vars.values()
         # t1
@@ -34,7 +35,11 @@ class Arm:
         alpha = math.atan2(y, x)
         beta = math.atan2(d2, u)
 
-        t1 = alpha - beta
+        if self.corner in (2, 4):
+            t1 = alpha - beta
+
+        else:
+            t1 = alpha + beta + math.tau / 2
 
         s = z - d1
         l = math.hypot(s, u)
@@ -42,13 +47,20 @@ class Arm:
         # making sure D doesnt excced -1 one cause floating points
         D = min(max(D, -1), 1)
         # t2
-        if dog:
+        if self.corner in (1, 2):
             t3 = - math.atan2(math.sqrt(1 - D ** 2), D)
         else:
             t3 = - math.atan2(- math.sqrt(1 - D ** 2), D)
+
         phi = math.atan2(s, u)
         gamma = math.atan2(a3 * math.sin(t3), a2 + a3 * math.cos(t3))
-        t2 = - (gamma + phi)
+        
+        if self.corner in (1,3):
+            t2 = (phi + gamma) + math.tau/2
+            t3 = -t3
+        else:
+            t2 = - (phi + gamma)
+
         t3 = t2 + t3
         return np.array([t1, t2, t3]).reshape((3, 1))
 
@@ -164,8 +176,8 @@ class Arm:
         self.upper_axis.set_setpoint(t2)
         self.lower_axis.set_setpoint(t3)
 
-    def send_to_pos(self, target_pos, dog = True):
-        thetas = self.ikin(target_pos, dog)
+    def send_to_pos(self, target_pos):
+        thetas = self.ikin(target_pos)
         self.go_to_thetas(thetas)
 
     def jog(self,thetas,pos):

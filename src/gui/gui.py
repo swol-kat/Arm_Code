@@ -22,7 +22,7 @@ class Window(QDialog):
         # this is the Canvas Widget that  
         # displays the 'figure'it takes the 
         # 'figure' instance as a parameter to __init__ 
-        self.canvas = FigureCanvas(self.figure) 
+        self.canvas = FigureCanvas(self.figure)  #using matplotlib slows things down here. may want to remove this graph in the future
    
         # this is the Navigation widget 
         # it takes the Canvas widget and a parent 
@@ -83,9 +83,9 @@ class Window(QDialog):
         self.arm_input_pos[2] = float(self.line[2].text())
         #set arm target with x y z
 
-    # action called by thte push button 
+    # action called by the push button 
     def plot(self): 
-        if self.arm_comm:
+        if self.arm_comm != None:
             while self.arm_comm.poll():
                 arm_dict = self.arm_comm.recv()
                 self.data[0] = arm_dict[joint_pos]['x']

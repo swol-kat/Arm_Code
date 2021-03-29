@@ -9,6 +9,7 @@ import json
 import matplotlib as plot
 from gui.gui import gui_worker
 from arm.joint import Odrive_Controller, Threaded_Joint
+from arm.arm import Arm
 
 odrive_pipe = namedtuple('odrive_pipe', ['to_worker', 'to_main', 'axis_0_name', 'axis_1_name'])
 
@@ -17,22 +18,26 @@ print('finding odrives')
 def odrive_worker(serial, conn):
     search_serial = format(int(serial), 'x').upper()
     od = odrive.find_any(serial_number = search_serial)
+    print(f'found odrive {search_serial}')
     conn.send(0)
     while True:
         command = conn.recv()
-
+        
         out_data = {}
         out_data['axis_0'] = {}
         out_data['axis_1'] = {}
         out_data['odrive'] = {}
 
         #run given functions on assigned axes if available
-        if command['axis_0']['function']:
-            command['axis_0']['function'](od.axis0, out_data['axis_0'])
-        if command['axis_1']['function']:    
-            command['axis_1']['function'](od.axis1, out_data['axis_1'])
-        if command['odrive']:
-            command['odrive'](od, out_data['odrive'])
+        if 'command' in command['axis_0']:
+            #print('axis 0 command')
+            command['axis_0']['command'](od.axis0, out_data['axis_0'])
+        if 'command' in command['axis_1']: 
+            #print('axis 1 command')
+            command['axis_1']['command'](od.axis1, out_data['axis_1'])
+        if 'command' in command:
+            #print('odrive command')
+            command['command'](od, out_data['odrive'])
 
         #index command is necessary. added in odrive handler
         out_data['index'] = command['index']
@@ -40,8 +45,8 @@ def odrive_worker(serial, conn):
         #pos, curr commands automatically done. must be sent in control packets
         od.axis0.controller.input_pos = command['axis_0']['pos_command']
         od.axis1.controller.input_pos = command['axis_1']['pos_command']
-        od.axis0.motor.config.current_lim = ['axis_0']['curr_command']
-        od.axis1.motor.config.current_lim = ['axis_1']['curr_command']
+        od.axis0.motor.config.current_lim = command['axis_0']['curr_command']
+        od.axis1.motor.config.current_lim = command['axis_1']['curr_command']
 
         out_data['axis_0']['data'] = {'pos':od.axis0.encoder.pos_estimate, 'vel':od.axis0.encoder.vel_estimate, 'current':od.axis0.motor.current_control.Iq_measured}
         out_data['axis_1']['data'] = {'pos':od.axis1.encoder.pos_estimate, 'vel':od.axis1.encoder.vel_estimate, 'current':od.axis1.motor.current_control.Iq_measured}
@@ -72,29 +77,71 @@ arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
 #make arm objects
 arm_dict = {}
-arm_dict['right_arm'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables)
-arm_dict['left_arm'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables)
+arm_dict['front_right'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables, 1)
+arm_dict['front_left'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables, 2)
 
-#start gui worker - needs arm object
-process_list.append(Process(target=gui_worker, args=(arm_dict['right_arm'], )))
-process_list[-1].start()
+print('settings setup')
 
-# main program
-fake_data = axis_command(0, 0)
-fake_odrive_packet = odrive_command(deepcopy(fake_data),deepcopy(fake_data))
+for controller in odrive_controllers:
+    controller.set_odrive_params()
 
-quit_loop = False
-while not quit_loop:
-    
-    for drive in odrive_pipes:
-        drive.to_main.send(deepcopy(fake_odrive_packet))
-    # do joint calculations here and form packets
-    
-    for drive in odrive_pipes:
-        data = drive.to_main.recv()
+for controller in odrive_controllers:
+    controller.send_packet()
+
+for controller in odrive_controllers:
+    controller.block_for_response()
+
+#now do homing
+
+print('homing motors')
+
+#we just try one
+joint_dict['4 upper'].home()
+
+i = 0
+
+while joint_dict['4 upper'].home == 'home':
+    #print('sending')
+    for controller in odrive_controllers:
+        controller.send_packet()
+    #print('reciving')
+    for controller in odrive_controllers:
+        controller.block_for_response()
+
+    i = i + 1
+
+print('end')
 
 for process in process_list:
     process.terminate()
+quit()
+
+#then enable motors
+
+#print('enable motors')
+
+print('running loop')
+
+#need IDs for the rest of the arms
+
+#start gui worker - needs arm object
+#process_list.append(Process(target=gui_worker, args=(None, )))
+#process_list[-1].start()
+
+# main program
+
+try:
+    while True:
+        #do robot here with arms
+        for controller in odrive_controllers:
+            controller.send_packet()
+        for controller in odrive_controllers:
+            controller.block_for_response()
+
+except(SystemExit):
+    for process in process_list:
+        process.terminate()
+    #TODO: close serial port on reciever
 
 
 
