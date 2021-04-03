@@ -79,6 +79,8 @@ arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 arm_dict = {}
 arm_dict['front_right'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables, 1)
 arm_dict['front_left'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables, 2)
+arm_dict['back_right'] = Arm(joint_dict['3 lower'], joint_dict['3 upper'], joint_dict['3 shoulder'], arm_variables, 3)
+arm_dict['back_left'] = Arm(joint_dict['4 lower'], joint_dict['4 upper'], joint_dict['4 shoulder'], arm_variables, 4)
 
 print('settings setup')
 
@@ -98,17 +100,14 @@ print('homing motors')
 #we just try one
 joint_dict['4 upper'].home()
 
-i = 0
 
-while joint_dict['4 upper'].home == 'home':
-    #print('sending')
+while not joint_dict['4 upper'].is_home_complete():
+    print('sending')
     for controller in odrive_controllers:
         controller.send_packet()
-    #print('reciving')
+    print('receiving')
     for controller in odrive_controllers:
         controller.block_for_response()
-
-    i = i + 1
 
 print('end')
 
@@ -127,6 +126,8 @@ print('running loop')
 #start gui worker - needs arm object
 #process_list.append(Process(target=gui_worker, args=(None, )))
 #process_list[-1].start()
+
+robot_gait = stand_gait(arm_dict, None, None)
 
 # main program
 

@@ -58,13 +58,17 @@ def get_errors(axis, output_dict):
     output_dict['controller'] = axis.controller.error
 
 def home_axis(axis, output_dict):
-    axis.requested_state = odrive.enums.AXIS_STATE_HOMING
+    axis.clear_errors()
+    axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
     output_dict['home_started'] = True
+    print('starting calibration')
 
 def check_home(axis, output_dict):
+    print('checking calibration')
     if axis.current_state == odrive.enums.AXIS_STATE_IDLE:
         #add encoder rounding logic here
         output_dict['home_complete'] = True
+        print('home complete')
     else:
         output_dict['home_complete'] = False
 
@@ -277,4 +281,4 @@ class Threaded_Joint:
         self.state = 'home'
     
     def is_home_complete(self):
-        return self.state != 'home'
+        return self.state == 'halt'

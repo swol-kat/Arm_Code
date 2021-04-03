@@ -4,7 +4,7 @@ def set_odrive_params_func(drive, out_dict):
     drive.axis0.min_endstop.config.gpio_num = 6
     drive.axis1.min_endstop.config.gpio_num = 7
     drive.config.max_regen_current = 120.0
-    drive.config.dc_bus_overvoltage_trip_level = 14.0
+    drive.config.dc_bus_overvoltage_trip_level = 45.0
     drive.config.dc_max_positive_current = 120.0
     drive.config.dc_max_negative_current = -120.0
     drive.save_configuration()
