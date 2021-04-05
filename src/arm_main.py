@@ -96,17 +96,26 @@ for controller in odrive_controllers:
 
 #now do homing
 
-print('homing motors')
+print('calibrating motors')
 
 #we just try one
 joint_dict['4 upper'].calibrate()
 
 
 while not joint_dict['4 upper'].is_calibration_complete():
-    print('sending')
     for controller in odrive_controllers:
         controller.send_packet()
-    print('receiving')
+    for controller in odrive_controllers:
+        controller.block_for_response()
+
+print('homing motors')
+
+joint_dict['4 upper'].home()
+
+
+while not joint_dict['4 upper'].is_home_complete():
+    for controller in odrive_controllers:
+        controller.send_packet()
     for controller in odrive_controllers:
         controller.block_for_response()
 
