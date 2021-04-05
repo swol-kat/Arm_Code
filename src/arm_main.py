@@ -17,6 +17,7 @@ print('finding odrives')
 
 def odrive_worker(serial, conn):
     search_serial = format(int(serial), 'x').upper()
+    print(f'searching for odrive {search_serial}')
     od = odrive.find_any(serial_number = search_serial)
     print(f'found odrive {search_serial}')
     conn.send(0)
@@ -98,10 +99,10 @@ for controller in odrive_controllers:
 print('homing motors')
 
 #we just try one
-joint_dict['4 upper'].home()
+joint_dict['4 upper'].calibrate()
 
 
-while not joint_dict['4 upper'].is_home_complete():
+while not joint_dict['4 upper'].is_calibration_complete():
     print('sending')
     for controller in odrive_controllers:
         controller.send_packet()

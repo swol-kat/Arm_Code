@@ -8,21 +8,30 @@ def set_state_to_halt(axis, output_dict):
     axis.requested_state = odrive.enums.AXIS_STATE_IDLE
 
 def start_calibrate_joint(axis, output_dict):
+    print('start calibrate')
     axis.clear_errors()
+    if axis.error:
+        print('axis has existing errors')
+        print(f'error: {hex(axis.error)}')
     axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-    output_dict['curr_state'] = axis.requested_state.current_state
+    time.sleep(1)
+    output_dict['curr_state'] = axis.current_state
 
 def check_curr_state(axis, output_dict):
-    output_dict['curr_state'] = axis.requested_state.current_state
+    print('check calibrate')
+    if axis.error:
+        print('axis error occured')
+        print(f'error: {hex(axis.error)}')
+    output_dict['curr_state'] = axis.current_state
 
 def enable_axis(axis, output_dict):
     axis.clear_errors()
     axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
-    output_dict['curr_state'] = axis.requested_state.current_state
+    output_dict['curr_state'] = axis.current_state
 
 def disable_axis(axis, output_dict):
     axis.requested_state = odrive.enums.AXIS_STATE_IDLE
-    output_dict['curr_state'] = axis.requested_state.current_state
+    output_dict['curr_state'] = axis.current_state
 
 def configure_axis(axis, output_dict):
     axis.encoder.config.mode = 257
@@ -44,7 +53,7 @@ def configure_axis(axis, output_dict):
     axis.controller.config.vel_ramp_rate = 2.5
     axis.controller.config.torque_ramp_rate = 0.01
     axis.controller.config.inertia = 0.0
-    axis.controller.config.homing_speed = 0.25
+    axis.controller.config.homing_speed = -0.5
     axis.min_endstop.config.is_active_high = False
     axis.min_endstop.config.enabled = True
     axis.min_endstop.config.offset = 0.0
@@ -59,7 +68,7 @@ def get_errors(axis, output_dict):
 
 def home_axis(axis, output_dict):
     axis.clear_errors()
-    axis.requested_state = odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+    axis.requested_state = odrive.enums.AXIS_STATE_HOMING
     output_dict['home_started'] = True
     print('starting calibration')
 
@@ -195,9 +204,10 @@ class Threaded_Joint:
             #current readings will freeze if motor is not enabled
             self.curr_current = 0.0
             return
-        
+
         if self.state == 'wait_calibrate':
             if 'curr_state' in data_dict and data_dict['curr_state'] == odrive.enums.AXIS_STATE_IDLE:
+                print('motor idle')
                 self.state = 'halt'
                 #motor needs to be enabled after calibration
             return
@@ -242,7 +252,7 @@ class Threaded_Joint:
     def calibrate(self):
         #only calibrate if in correct state to
         if self.state == 'halt' or self.state == 'run':
-            self.state = 'calibrate'
+            self.state = 'start_calibrate'
 
     def configure(self):
         self.state = 'configure'
@@ -275,7 +285,7 @@ class Threaded_Joint:
         }
 
     def is_calibration_complete(self):
-        return self.state != odrive.enums.AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+        return self.state == 'halt'
     
     def home(self):
         self.state = 'home'
