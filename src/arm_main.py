@@ -54,7 +54,7 @@ def odrive_worker(serial, conn):
 
         conn.send(out_data)
 
-axis_dict = json.loads(open('axis_config.json', "r").read())
+axis_dict = json.loads(open('axis_config_pack2.json', "r").read())
 
 serials = list(axis_dict.keys())
 
@@ -78,8 +78,8 @@ arm_variables = {'D1': 3.319, 'D2': 3.125, 'A2': 7.913, 'A3': 9.0}
 
 #make arm objects
 arm_dict = {}
-arm_dict['front_right'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables, 1)
-arm_dict['front_left'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables, 2)
+#arm_dict['front_right'] = Arm(joint_dict['1 lower'], joint_dict['1 upper'], joint_dict['1 shoulder'], arm_variables, 1)
+#arm_dict['front_left'] = Arm(joint_dict['2 lower'], joint_dict['2 upper'], joint_dict['2 shoulder'], arm_variables, 2)
 arm_dict['back_right'] = Arm(joint_dict['3 lower'], joint_dict['3 upper'], joint_dict['3 shoulder'], arm_variables, 3)
 arm_dict['back_left'] = Arm(joint_dict['4 lower'], joint_dict['4 upper'], joint_dict['4 shoulder'], arm_variables, 4)
 
@@ -98,45 +98,57 @@ for controller in odrive_controllers:
 
 print('calibrating motors')
 
-#we just try one
+#just calibrate one arm for arjun
+
 joint_dict['4 upper'].calibrate()
+joint_dict['4 lower'].calibrate()
+joint_dict['4 shoulder'].calibrate()
 
+cal_incomplete = True
 
-while not joint_dict['4 upper'].is_calibration_complete():
+while cal_incomplete:
     for controller in odrive_controllers:
         controller.send_packet()
     for controller in odrive_controllers:
         controller.block_for_response()
+    if joint_dict['4 upper'].is_calibration_complete() and joint_dict['4 lower'].is_calibration_complete() and joint_dict['4 shoulder'].is_calibration_complete():
+        cal_incomplete = False
 
 print('homing motors')
 
 joint_dict['4 upper'].home()
+joint_dict['4 lower'].home()
+joint_dict['4 shoulder'].home()
 
+cal_incomplete = True
 
-while not joint_dict['4 upper'].is_home_complete():
+while cal_incomplete:
     for controller in odrive_controllers:
         controller.send_packet()
     for controller in odrive_controllers:
         controller.block_for_response()
+    if joint_dict['4 upper'].is_home_complete() and joint_dict['4 lower'].is_home_complete() and joint_dict['4 shoulder'].is_home_complete():
+        cal_incomplete = False
 
-print('end')
 
-for process in process_list:
-    process.terminate()
-quit()
+print('enable motors')
 
-#then enable motors
+joint_dict['4 upper'].enable()
+joint_dict['4 lower'].enable()
+joint_dict['4 shoulder'].enable()
 
-#print('enable motors')
+for controller in odrive_controllers:
+    controller.send_packet()
+for controller in odrive_controllers:
+    controller.block_for_response()
 
 print('running loop')
-
-#need IDs for the rest of the arms
 
 #start gui worker - needs arm object
 #process_list.append(Process(target=gui_worker, args=(None, )))
 #process_list[-1].start()
 
+#------------------------------------arjun do stuff here ---------------------------------------------
 robot_gait = stand_gait(arm_dict, None, None)
 
 # main program
