@@ -130,6 +130,18 @@ while cal_incomplete:
     if joint_dict['4 upper'].is_home_complete() and joint_dict['4 lower'].is_home_complete() and joint_dict['4 shoulder'].is_home_complete():
         cal_incomplete = False
 
+print('set motors in zero position')
+
+time.sleep(3)
+
+joint_dict['4 upper'].set_zero()
+joint_dict['4 lower'].set_zero()
+joint_dict['4 shoulder'].set_zero()
+
+for controller in odrive_controllers:
+    controller.send_packet()
+for controller in odrive_controllers:
+    controller.block_for_response()
 
 print('enable motors')
 

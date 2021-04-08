@@ -75,6 +75,11 @@ def home_axis(axis, output_dict):
     output_dict['home_started'] = True
     print('starting home')
 
+def set_axis_zero(axis, output_dict):
+    axis.clear_errors()
+    axis.requested_state = odrive.enums.AXIS_STATE_IDLE
+    axis.encoder.set_linear_count(0)
+
 def check_home(axis, output_dict):
     print('checking home')
     if axis.error:
@@ -131,6 +136,11 @@ class Threaded_Joint:
 
 
             command_dict['command'] = set_state_to_halt
+            command_dict['pos_command'] = 0.0
+            command_dict['curr_command'] = 0.0
+        
+        if self.state == 'set_zero':
+            command_dict['command'] = set_axis_zero
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
 
@@ -298,3 +308,6 @@ class Threaded_Joint:
     
     def is_home_complete(self):
         return self.state == 'halt'
+    
+    def set_zero(self):
+        self.state = 'set_zero'
