@@ -114,6 +114,7 @@ while cal_incomplete:
     if joint_dict['4 upper'].is_calibration_complete() and joint_dict['4 lower'].is_calibration_complete() and joint_dict['4 shoulder'].is_calibration_complete():
         cal_incomplete = False
 
+'''
 print('homing motors')
 
 joint_dict['4 upper'].home()
@@ -129,7 +130,7 @@ while cal_incomplete:
         controller.block_for_response()
     if joint_dict['4 upper'].is_home_complete() and joint_dict['4 lower'].is_home_complete() and joint_dict['4 shoulder'].is_home_complete():
         cal_incomplete = False
-
+'''
 print('set motors in zero position')
 
 time.sleep(3)
