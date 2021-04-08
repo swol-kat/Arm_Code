@@ -143,6 +143,7 @@ class Threaded_Joint:
             command_dict['command'] = set_axis_zero
             command_dict['pos_command'] = 0.0
             command_dict['curr_command'] = 0.0
+            self.state = 'halt'
 
         if self.state == 'wait_calibrate':
 
