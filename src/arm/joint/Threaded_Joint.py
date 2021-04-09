@@ -41,6 +41,7 @@ def configure_axis(axis, output_dict):
     axis.motor.config.pole_pairs = 20
     axis.motor.config.torque_constant = 8.27/160
     axis.motor.config.current_lim = 10.0
+    axis.motor.config.requested_current_range = 20.0
     axis.motor.config.current_lim_margin = 1000
     axis.motor.config.torque_lim = 10000
     axis.controller.config.enable_vel_limit = True
@@ -94,8 +95,8 @@ def check_home(axis, output_dict):
 
 def show_errors(axis, outptu_dict):
         if axis.error:
-        print('axis error occured')
-        print(f'error: {hex(axis.error)}')
+            print('axis error occured')
+            print(f'error: {hex(axis.error)}')
 
 class Threaded_Joint:
     def __init__(self, gear_ratio, torque_constant):
