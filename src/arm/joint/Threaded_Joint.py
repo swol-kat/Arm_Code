@@ -25,6 +25,9 @@ def check_curr_state(axis, output_dict):
     output_dict['curr_state'] = axis.current_state
 
 def enable_axis(axis, output_dict):
+    if axis.error:
+        print('axis error occured')
+        print(f'error: {hex(axis.error)}')
     axis.clear_errors()
     axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
     output_dict['curr_state'] = axis.current_state
@@ -41,7 +44,7 @@ def configure_axis(axis, output_dict):
     axis.motor.config.pole_pairs = 20
     axis.motor.config.torque_constant = 8.27/160
     axis.motor.config.current_lim = 10.0
-    axis.motor.config.requested_current_range = 20.0
+    axis.motor.config.requested_current_range = 25.0
     axis.motor.config.current_lim_margin = 1000
     axis.motor.config.torque_lim = 10000
     axis.controller.config.enable_vel_limit = True
@@ -68,6 +71,9 @@ def get_errors(axis, output_dict):
     output_dict['controller'] = axis.controller.error
 
 def home_axis(axis, output_dict):
+    if axis.error:
+        print('axis error occured')
+        print(f'error: {hex(axis.error)}')
     axis.clear_errors()
     axis.requested_state = odrive.enums.AXIS_STATE_HOMING
     if axis.error:
