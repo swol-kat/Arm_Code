@@ -92,6 +92,11 @@ def check_home(axis, output_dict):
     else:
         output_dict['home_complete'] = False
 
+def show_errors(axis, outptu_dict):
+        if axis.error:
+        print('axis error occured')
+        print(f'error: {hex(axis.error)}')
+
 class Threaded_Joint:
     def __init__(self, gear_ratio, torque_constant):
         self.gear_ratio = gear_ratio
@@ -161,6 +166,7 @@ class Threaded_Joint:
             self.state = 'wait_calibrate'
 
         if self.state == 'run':
+            command_dict['command'] = show_errors
             command_dict['pos_command'] = self.angle_to_motor(self.pos_command)
             command_dict['curr_command'] = self.torque_to_current(self.torque_limit)
         
