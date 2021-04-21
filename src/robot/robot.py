@@ -53,6 +53,8 @@ class Robot:
         if self.gait:
             self.gait.loop(self)
         for arm in self.arms:
+            if arm.corner == 3:
+                print(arm.target_pos)
             arm.loop()
 
     def reload_config(self):
