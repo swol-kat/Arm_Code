@@ -41,34 +41,19 @@ class Robot:
         self.target_base_state = BodyState(z=11)
         self.stance_width = 2
         self.stance_length = 2
-        self.executing_movement_vector = dict(x=0, y=0, z=0, alpha=0, beta=0, gamma=0)
-        self.movement_vector = dict(x=0, y=0, z=0, alpha=0, beta=0, gamma=0)
 
-        self.gait = Wiggle()
-        self.gait.prev_foot_pos = get_body_pts(BodyState(),self.config['width']+self.stance_width,self.config['length']+self.stance_length,False)
-        self.last_time = time.time()
+        self.gait = StaticWalk()
+        self.gait.prev_foot_pos = get_body_pts(BodyState(),self.config['width']+self.stance_width ,self.config['length']+self.stance_length ,False)
+        self.movement_vector = {'x': 0, 'y': 0,'z':0, 'alpha':0,'beta':0,'gamma':0}
 
-        self.loop_time = 2
-        self.in_loop = False
-        self.last_loop_time = time.time()
+
 
     def loop(self):
         """
         main control loop of robot run this in a while loop or something
         :return:
-        """
-        if self.in_loop:
-            pos_adjust = {k: v*(time.time()-self.last_time) for k,v in self.executing_movement_vector.items()}
-            self.last_time = time.time()
-            self.target_base_state.move(**pos_adjust)
-            self.base_state = self.target_base_state
-            if time.time() - self.last_loop_time > self.loop_time:
-                self.in_loop = False
-        else:
-            self.executing_movement_vector = copy.deepcopy(self.movement_vector)
-            self.last_loop_time = time.time()
-            self.in_loop = True
-    
+        """    
+        self.base_state = self.target_base_state
         self.plot.plot(self)
         if self.gait:
             self.gait.loop(self)
