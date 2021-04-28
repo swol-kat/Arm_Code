@@ -7,7 +7,7 @@ from .gait import Gait
 from ..util import get_body_pts, get_rot_leg_orig, euler_tm, swing_pos, ground_pos
 
 
-class OpenWalk(Gait):
+class StaticWalk(Gait):
 
     def __init__(self):
         super().__init__()
@@ -15,8 +15,8 @@ class OpenWalk(Gait):
             'step_time': .5,  # seconds per movment
             'step_height': 2,  # inches,
         }
-        self.state = [1, 3]
-        self.init_state = [1,3]
+        self.state = [1]
+        self.init_state = [1]
         self.x_vel = 0
         self.y_vel = 0
         self.last_time = time.time()
@@ -24,7 +24,7 @@ class OpenWalk(Gait):
     def loop(self, robot):
         width = robot.config["width"]
         length = robot.config["length"]
-        step_time = robot.loop_time/2
+        step_time = robot.loop_time/4
 
         dt = time.time() - self.last_time
         body_pts = get_body_pts(robot.target_base_state, width, length, False)
@@ -54,9 +54,8 @@ class OpenWalk(Gait):
             self.next_state()
             self.last_time = time.time()
             if self.state == self.init_state:
-                self.x_vel = robot.executing_movement_vector['x'] *2
-                self.y_vel = robot.executing_movement_vector['y'] *2
-        
+                self.x_vel = robot.executing_movement_vector['x'] *4
+                self.y_vel = robot.executing_movement_vector['y'] *4
 
 
 
